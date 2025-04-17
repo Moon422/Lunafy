@@ -40,6 +40,7 @@ public class LunafyDbContext : DbContext
             entity.HasOne<User>()
                 .WithOne()
                 .HasForeignKey<Auth>(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
         });
 
@@ -47,13 +48,13 @@ public class LunafyDbContext : DbContext
         {
             entity.HasMany<Album>()
                 .WithMany()
-                .UsingEntity<GenreAlbumMapping>(r => r.HasOne<Album>().WithMany().HasForeignKey(e => e.AlbumId).IsRequired(),
-                    l => l.HasOne<Genre>().WithMany().HasForeignKey(e => e.GenreId).IsRequired());
+                .UsingEntity<GenreAlbumMapping>(r => r.HasOne<Album>().WithMany().HasForeignKey(e => e.AlbumId).OnDelete(DeleteBehavior.Cascade).IsRequired(),
+                    l => l.HasOne<Genre>().WithMany().HasForeignKey(e => e.GenreId).OnDelete(DeleteBehavior.Cascade).IsRequired());
 
             entity.HasMany<Song>()
                 .WithMany()
-                .UsingEntity<GenreSongMapping>(r => r.HasOne<Song>().WithMany().HasForeignKey(e => e.SongId).IsRequired(),
-                    l => l.HasOne<Genre>().WithMany().HasForeignKey(e => e.GenreId).IsRequired());
+                .UsingEntity<GenreSongMapping>(r => r.HasOne<Song>().WithMany().HasForeignKey(e => e.SongId).OnDelete(DeleteBehavior.Cascade).IsRequired(),
+                    l => l.HasOne<Genre>().WithMany().HasForeignKey(e => e.GenreId).OnDelete(DeleteBehavior.Cascade).IsRequired());
         });
 
         modelBuilder.Entity<Song>(entity =>
@@ -64,12 +65,13 @@ public class LunafyDbContext : DbContext
 
             entity.HasOne<Album>()
                 .WithMany()
-                .HasForeignKey(e => e.AlbumId);
+                .HasForeignKey(e => e.AlbumId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasMany<Artist>()
                 .WithMany()
-                .UsingEntity<ArtistSongMapping>(r => r.HasOne<Artist>().WithMany().HasForeignKey(e => e.ArtistId).IsRequired(),
-                    l => l.HasOne<Song>().WithMany().HasForeignKey(e => e.SongId).IsRequired());
+                .UsingEntity<ArtistSongMapping>(r => r.HasOne<Artist>().WithMany().HasForeignKey(e => e.ArtistId).OnDelete(DeleteBehavior.Cascade).IsRequired(),
+                    l => l.HasOne<Song>().WithMany().HasForeignKey(e => e.SongId).OnDelete(DeleteBehavior.Cascade).IsRequired());
         });
     }
 }
