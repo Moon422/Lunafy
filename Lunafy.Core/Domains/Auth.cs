@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Lunafy.Core.Domains;
 
 public class Auth : BaseEntity
