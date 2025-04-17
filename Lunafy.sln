@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunafy.Core", "Lunafy.Core\Lunafy.Core.csproj", "{EEEDAFB6-F5F9-43AD-BB10-D73BB6DA464B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunafy.Data", "Lunafy.Data\Lunafy.Data.csproj", "{8E7FD176-E114-4C7A-8863-D91CD7537F52}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{EEEDAFB6-F5F9-43AD-BB10-D73BB6DA464B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEEDAFB6-F5F9-43AD-BB10-D73BB6DA464B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEEDAFB6-F5F9-43AD-BB10-D73BB6DA464B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E7FD176-E114-4C7A-8863-D91CD7537F52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E7FD176-E114-4C7A-8863-D91CD7537F52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E7FD176-E114-4C7A-8863-D91CD7537F52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E7FD176-E114-4C7A-8863-D91CD7537F52}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
