@@ -14,19 +14,19 @@ public interface IRepository<T> where T : BaseEntity
 
     Task<int> GetCountAsync();
 
-    Task<IList<T>> GetAllAsync(Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true, bool sortByIdDesc = false);
+    Task<IList<T>> GetAllAsync(Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false);
 
-    Task<IList<T>> GetAllAsync(Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey>? getCacheKey = null, bool includeDeleted = true, bool sortByIdDesc = false);
+    Task<IList<T>> GetAllAsync(Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false);
 
-    Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true, bool sortByIdDesc = false);
+    Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false);
 
-    Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true, bool sortByIdDesc = false);
+    Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false);
 
-    Task<IPagedList<T>> GetAllPagedAsync(int pageIndex = 0, int pageSize = int.MaxValue, Func<IQueryable<T>, IQueryable<T>>? func = null, bool includeDeleted = true, bool sortByIdDesc = false);
+    Task<IPagedList<T>> GetAllPagedAsync(int pageIndex = 0, int pageSize = int.MaxValue, Func<IQueryable<T>, IQueryable<T>>? func = null, bool includeDeleted = false, bool sortByIdDesc = false);
 
-    Task<T?> GetByIdAsync(int id, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true);
+    Task<T?> GetByIdAsync(int id, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false);
 
-    Task<IList<T>> GetByIdsAsync(IList<int> ids, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true);
+    Task<IList<T>> GetByIdsAsync(IList<int> ids, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false);
 
     Task InsertAsync(T entity, bool publishEvent = true);
 

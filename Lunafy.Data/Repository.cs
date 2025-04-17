@@ -55,7 +55,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return await Table.CountAsync();
     }
 
-    public async Task<IList<T>> GetAllAsync(Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true, bool sortByIdDesc = false)
+    public async Task<IList<T>> GetAllAsync(Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false)
     {
         var getAllAsync = async () =>
         {
@@ -82,7 +82,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return await _cacheManager.GetAsync<T>(cacheKey, async () => await getAllAsync());
     }
 
-    public async Task<IList<T>> GetAllAsync(Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true, bool sortByIdDesc = false)
+    public async Task<IList<T>> GetAllAsync(Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false)
     {
         var getAllAsync = async () =>
         {
@@ -110,7 +110,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return await _cacheManager.GetAsync<T>(cacheKey, async () => await getAllAsync());
     }
 
-    public async Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true, bool sortByIdDesc = false)
+    public async Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false)
     {
         if (pageIndex < 0)
             pageIndex = 0;
@@ -144,7 +144,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return new PagedList<T>(data, pageIndex, pageSize);
     }
 
-    public async Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true, bool sortByIdDesc = false)
+    public async Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false)
     {
         if (pageIndex < 0)
             pageIndex = 0;
@@ -179,7 +179,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return new PagedList<T>(data, pageIndex, pageSize);
     }
 
-    public async Task<IPagedList<T>> GetAllPagedAsync(int pageIndex = 0, int pageSize = int.MaxValue, Func<IQueryable<T>, IQueryable<T>>? func = null, bool includeDeleted = true, bool sortByIdDesc = false)
+    public async Task<IPagedList<T>> GetAllPagedAsync(int pageIndex = 0, int pageSize = int.MaxValue, Func<IQueryable<T>, IQueryable<T>>? func = null, bool includeDeleted = false, bool sortByIdDesc = false)
     {
         if (pageIndex < 0)
             pageIndex = 0;
@@ -203,7 +203,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return await query.ToPagedListAsync(pageIndex, pageSize);
     }
 
-    public async Task<T?> GetByIdAsync(int id, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true)
+    public async Task<T?> GetByIdAsync(int id, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false)
     {
         if (id <= 0)
             return null;
@@ -223,7 +223,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return await _cacheManager.GetAsync(cacheKey, async () => await getByIdAsync());
     }
 
-    public async Task<IList<T>> GetByIdsAsync(IList<int> ids, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = true)
+    public async Task<IList<T>> GetByIdsAsync(IList<int> ids, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false)
     {
         if (ids == null || !ids.Any())
             return new List<T>();
