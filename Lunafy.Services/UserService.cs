@@ -48,15 +48,35 @@ public class UserService : IUserService
             auth = new Auth
             {
                 UserId = user.Id,
-                PasswordHash = password
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password)
             };
 
             await _authRepository.InsertAsync(auth);
             return;
         }
 
-        auth.PasswordHash = password;
+        auth.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
         await _authRepository.UpdateAsync(auth);
+    }
+
+    public async Task<bool> VerifyPasswordAsync(int userId, string password)
+    {
+        if (userId <= 0)
+            throw new ArgumentException($"{nameof(userId)} cannot be less then or equal to 0");
+
+        if (string.IsNullOrWhiteSpace(password) || password.Length > 72)
+            throw new ArgumentException($"{nameof(password)} cannot be empty or greater than 72 characters");
+
+        var user = (await GetUserByIdAsync(userId)) ??
+            throw new EntityNotFoundException(nameof(User));
+
+        if (user.Deleted)
+            throw new EntityNotFoundException(nameof(User));
+
+        var auth = (await _authRepository.Table.FirstOrDefaultAsync(a => a.UserId == user.Id)) ??
+            throw new EntityNotFoundException(nameof(Auth));
+
+        return BCrypt.Net.BCrypt.Verify(password, auth.PasswordHash);
     }
 
     public async Task<User?> GetUserByIdAsync(int id, bool includeDeleted = false)
