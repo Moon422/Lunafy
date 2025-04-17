@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Lunafy.Services;
 

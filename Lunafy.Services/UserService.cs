@@ -4,16 +4,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Data;
+using Lunafy.Services.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lunafy.Services;
 
 public class UserService : IUserService
 {
     private readonly IRepository<User> _userRepository;
+    private readonly IRepository<Auth> _authRepository;
 
-    public UserService(IRepository<User> userRepository)
+    public UserService(IRepository<User> userRepository,
+        IRepository<Auth> authRepository)
     {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _userRepository = userRepository;
+        _authRepository = authRepository;
     }
 
     public async Task CreateUserAsync(User user)
@@ -21,6 +26,37 @@ public class UserService : IUserService
         ArgumentNullException.ThrowIfNull(user, nameof(user));
 
         await _userRepository.InsertAsync(user);
+    }
+
+    public async Task CreatePasswordAsync(int userId, string password)
+    {
+        if (userId <= 0)
+            throw new ArgumentException($"{nameof(userId)} cannot be less then or equal to 0");
+
+        if (string.IsNullOrWhiteSpace(password) || password.Length > 72)
+            throw new ArgumentException($"{nameof(password)} cannot be empty or greater than 72 characters");
+
+        var user = (await GetUserByIdAsync(userId)) ??
+            throw new EntityNotFoundException(nameof(User));
+
+        if (user.Deleted)
+            throw new EntityNotFoundException(nameof(User));
+
+        var auth = await _authRepository.Table.FirstOrDefaultAsync(a => a.UserId == user.Id);
+        if (auth is null)
+        {
+            auth = new Auth
+            {
+                UserId = user.Id,
+                PasswordHash = password
+            };
+
+            await _authRepository.InsertAsync(auth);
+            return;
+        }
+
+        auth.PasswordHash = password;
+        await _authRepository.UpdateAsync(auth);
     }
 
     public async Task<User?> GetUserByIdAsync(int id, bool includeDeleted = false)
