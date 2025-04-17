@@ -20,7 +20,7 @@ public class User : BaseEntity, ICreationLogged, IModificationLogged, ISoftDelet
     public bool IsArtist { get; set; }
     public bool IsInactive { get; set; }
     public DateTime? InactiveTill { get; set; }
-    public int RequirePasswordReset { get; set; }
+    public bool RequirePasswordReset { get; set; }
     public DateTime LastLogin { get; set; }
 
     public DateTime CreatedOn { get; set; }

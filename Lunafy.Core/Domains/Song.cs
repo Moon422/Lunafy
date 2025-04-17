@@ -24,7 +24,7 @@ public class Song : BaseEntity, ICreationLogged, IModificationLogged, ISoftDelet
     [MaxLength(128)]
     public string? Comment { get; set; }
     public bool Explicit { get; set; }
-    public int AlbumId { get; set; }
+    public int? AlbumId { get; set; }
     public Guid MusicBrainzId { get; set; }
 
     [MaxLength(512)]
