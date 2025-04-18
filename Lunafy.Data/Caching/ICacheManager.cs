@@ -10,7 +10,7 @@ public interface ICacheManager
     CacheKey PrepareCacheKey(CacheKey key, params object[] parameters);
     Task<T?> GetAsync<T>(CacheKey key, Func<Task<T?>> fetch) where T : BaseEntity;
     Task<IList<T>> GetAsync<T>(CacheKey key, Func<Task<IList<T>>> fetch) where T : BaseEntity;
-    void ClearCache();
+    Task ClearCacheAsync();
     void RemoveCacheByKey(CacheKey key);
-    void RemoveCacheByPrefix(string prefix);
+    Task RemoveCacheByPrefixAsync(string prefix);
 }
