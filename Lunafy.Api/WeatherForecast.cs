@@ -1,3 +1,5 @@
+using System;
+
 namespace Lunafy.Api;
 
 public class WeatherForecast
