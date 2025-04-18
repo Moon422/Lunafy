@@ -4,16 +4,24 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Data;
+using Lunafy.Services.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lunafy.Services;
 
 public class AlbumService : IAlbumService
 {
     private readonly IRepository<Album> _albumRepository;
+    private readonly IRepository<GenreAlbumMapping> _genreAlbumMappingRepository;
+    private readonly IGenreService _genreService;
 
-    public AlbumService(IRepository<Album> albumRepository)
+    public AlbumService(IRepository<Album> albumRepository,
+        IRepository<GenreAlbumMapping> genreAlbumMappingRepository,
+        IGenreService genreService)
     {
         _albumRepository = albumRepository;
+        _genreAlbumMappingRepository = genreAlbumMappingRepository;
+        _genreService = genreService;
     }
 
     public async Task CreateAlbumAsync(Album album)
@@ -115,5 +123,41 @@ public class AlbumService : IAlbumService
         ArgumentNullException.ThrowIfNull(album, nameof(album));
 
         await _albumRepository.DeleteAsync(album);
+    }
+
+    public async Task AddAlbumGenreAsync(int albumId, int genreId)
+    {
+        Album? album;
+        if (albumId <= 0 || (album = await GetAlbumByIdAsync(albumId)) is null)
+            throw new EntityNotFoundException(nameof(Album));
+
+        Genre? genre;
+        if (genreId <= 0 || (genre = await _genreService.GetGenreByIdAsync(genreId)) is null)
+            throw new EntityNotFoundException(nameof(Genre));
+
+        await _genreAlbumMappingRepository.InsertAsync(new GenreAlbumMapping
+        {
+            GenreId = genre.Id,
+            AlbumId = album.Id
+        });
+    }
+
+    public async Task RemoveAlbumGenreAsync(int albumId, int genreId)
+    {
+        Album? album;
+        if (albumId <= 0 || (album = await GetAlbumByIdAsync(albumId)) is null)
+            throw new EntityNotFoundException(nameof(Album));
+
+        Genre? genre;
+        if (genreId <= 0 || (genre = await _genreService.GetGenreByIdAsync(genreId)) is null)
+            throw new EntityNotFoundException(nameof(Genre));
+
+        var genreAlbumMapping = await _genreAlbumMappingRepository.Table
+            .FirstOrDefaultAsync(gam => gam.AlbumId == album.Id && gam.GenreId == genre.Id);
+
+        if (genreAlbumMapping is null)
+            throw new EntityNotFoundException(nameof(GenreAlbumMapping));
+
+        await _genreAlbumMappingRepository.DeleteAsync(genreAlbumMapping);
     }
 }

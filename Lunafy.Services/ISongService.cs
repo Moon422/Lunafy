@@ -14,4 +14,8 @@ public interface ISongService
     Task<IPagedList<Song>> FindSongsAsync(FindSongsCommand findCommand, bool? deleted = false);
     Task UpdateSongAsync(Song song);
     Task DeleteSongAsync(Song song);
+    Task AddSongGenreAsync(int songId, int genreId);
+    Task RemoveSongGenreAsync(int songId, int genreId);
+    Task AddSongArtistAsync(int songId, int artistId);
+    Task RemoveSongArtistAsync(int songId, int artistId);
 }

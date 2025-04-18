@@ -4,16 +4,30 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Data;
+using Lunafy.Services.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lunafy.Services;
 
 public class SongService : ISongService
 {
     private readonly IRepository<Song> _songRepository;
+    private readonly IRepository<GenreSongMapping> _genreSongMappingRepository;
+    private readonly IRepository<ArtistSongMapping> _artistSongMappingRepository;
+    private readonly IGenreService _genreService;
+    private readonly IArtistService _artistService;
 
-    public SongService(IRepository<Song> songRepository)
+    public SongService(IRepository<Song> songRepository,
+        IRepository<GenreSongMapping> genreSongMappingRepository,
+        IRepository<ArtistSongMapping> artistSongMappingRepository,
+        IGenreService genreService,
+        IArtistService artistService)
     {
         _songRepository = songRepository ?? throw new ArgumentNullException(nameof(songRepository));
+        _genreSongMappingRepository = genreSongMappingRepository;
+        _artistSongMappingRepository = artistSongMappingRepository;
+        _genreService = genreService;
+        _artistService = artistService;
     }
 
     public async Task CreateSongAsync(Song song)
@@ -117,5 +131,77 @@ public class SongService : ISongService
         ArgumentNullException.ThrowIfNull(song, nameof(song));
 
         await _songRepository.DeleteAsync(song);
+    }
+
+    public async Task AddSongGenreAsync(int songId, int genreId)
+    {
+        Song? song;
+        if (songId <= 0 || (song = await GetSongByIdAsync(songId)) is null)
+            throw new EntityNotFoundException(nameof(Song));
+
+        Genre? genre;
+        if (genreId <= 0 || (genre = await _genreService.GetGenreByIdAsync(genreId)) is null)
+            throw new EntityNotFoundException(nameof(Genre));
+
+        await _genreSongMappingRepository.InsertAsync(new GenreSongMapping
+        {
+            GenreId = genre.Id,
+            SongId = song.Id
+        });
+    }
+
+    public async Task RemoveSongGenreAsync(int songId, int genreId)
+    {
+        Song? song;
+        if (songId <= 0 || (song = await GetSongByIdAsync(songId)) is null)
+            throw new EntityNotFoundException(nameof(Song));
+
+        Genre? genre;
+        if (genreId <= 0 || (genre = await _genreService.GetGenreByIdAsync(genreId)) is null)
+            throw new EntityNotFoundException(nameof(Genre));
+
+        var genreSongMapping = await _genreSongMappingRepository.Table
+            .FirstOrDefaultAsync(gsm => gsm.SongId == song.Id && gsm.GenreId == genre.Id);
+
+        if (genreSongMapping is null)
+            throw new EntityNotFoundException(nameof(GenreSongMapping));
+
+        await _genreSongMappingRepository.DeleteAsync(genreSongMapping);
+    }
+
+    public async Task AddSongArtistAsync(int songId, int artistId)
+    {
+        Song? song;
+        if (songId <= 0 || (song = await GetSongByIdAsync(songId)) is null)
+            throw new EntityNotFoundException(nameof(Song));
+
+        Artist? artist;
+        if (artistId <= 0 || (artist = await _artistService.GetArtistByIdAsync(artistId)) is null)
+            throw new EntityNotFoundException(nameof(Artist));
+
+        await _artistSongMappingRepository.InsertAsync(new ArtistSongMapping
+        {
+            ArtistId = artist.Id,
+            SongId = song.Id
+        });
+    }
+
+    public async Task RemoveSongArtistAsync(int songId, int artistId)
+    {
+        Song? song;
+        if (songId <= 0 || (song = await GetSongByIdAsync(songId)) is null)
+            throw new EntityNotFoundException(nameof(Song));
+
+        Artist? artist;
+        if (artistId <= 0 || (artist = await _artistService.GetArtistByIdAsync(artistId)) is null)
+            throw new EntityNotFoundException(nameof(Artist));
+
+        var artistSongMapping = await _artistSongMappingRepository.Table
+            .FirstOrDefaultAsync(asm => asm.SongId == song.Id && asm.ArtistId == artist.Id);
+
+        if (artistSongMapping is null)
+            throw new EntityNotFoundException(nameof(ArtistSongMapping));
+
+        await _artistSongMappingRepository.DeleteAsync(artistSongMapping);
     }
 }

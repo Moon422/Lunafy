@@ -14,4 +14,6 @@ public interface IAlbumService
     Task<IPagedList<Album>> FindAlbumsAsync(FindAlbumsCommand findCommand, bool? deleted = false);
     Task UpdateAlbumAsync(Album album);
     Task DeleteAlbumAsync(Album album);
+    Task AddAlbumGenreAsync(int albumId, int genreId);
+    Task RemoveAlbumGenreAsync(int albumId, int genreId);
 }
