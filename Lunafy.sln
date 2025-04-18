@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunafy.Data", "Lunafy.Data\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunafy.Services", "Lunafy.Services\Lunafy.Services.csproj", "{CBF8C074-84BE-4652-ACCB-F953BE12024B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunafy.Api", "Lunafy.Api\Lunafy.Api.csproj", "{2EAC8C8D-96EC-4CA7-A66A-AB33D299EE13}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{CBF8C074-84BE-4652-ACCB-F953BE12024B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBF8C074-84BE-4652-ACCB-F953BE12024B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBF8C074-84BE-4652-ACCB-F953BE12024B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EAC8C8D-96EC-4CA7-A66A-AB33D299EE13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EAC8C8D-96EC-4CA7-A66A-AB33D299EE13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EAC8C8D-96EC-4CA7-A66A-AB33D299EE13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EAC8C8D-96EC-4CA7-A66A-AB33D299EE13}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
