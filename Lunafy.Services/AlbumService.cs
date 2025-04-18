@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
+using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Data;
 using Lunafy.Services.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lunafy.Services;
 
+[ScopeDependency(typeof(IAlbumService))]
 public class AlbumService : IAlbumService
 {
     private readonly IRepository<Album> _albumRepository;

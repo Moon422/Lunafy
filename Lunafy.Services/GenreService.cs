@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
+using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Data;
 
 namespace Lunafy.Services;
 
+[ScopeDependency(typeof(IGenreService))]
 public class GenreService : IGenreService
 {
     private readonly IRepository<Genre> _genreRepository;

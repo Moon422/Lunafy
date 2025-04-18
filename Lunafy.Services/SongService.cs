@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
+using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Data;
 using Lunafy.Services.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lunafy.Services;
 
+[ScopeDependency(typeof(ISongService))]
 public class SongService : ISongService
 {
     private readonly IRepository<Song> _songRepository;

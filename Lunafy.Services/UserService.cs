@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
+using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Data;
 using Lunafy.Services.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lunafy.Services;
 
+[ScopeDependency(typeof(IUserService))]
 public class UserService : IUserService
 {
     private readonly IRepository<User> _userRepository;
