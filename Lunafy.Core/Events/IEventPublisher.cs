@@ -9,13 +9,3 @@ public partial interface IEventPublisher
 
     void Publish<TEvent>(TEvent @event);
 }
-
-public partial class EntityDeletedEvent<T> where T : BaseEntity
-{
-    public EntityDeletedEvent(T entity)
-    {
-        Entity = entity;
-    }
-
-    public T Entity { get; }
-}

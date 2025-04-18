@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
+using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Data.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 
 namespace Lunafy.Api.Caching;
 
+[SingletonDependency(typeof(ICacheManager))]
 public class CacheManager : ICacheManager
 {
     private readonly IMemoryCache _memoryCache;
@@ -18,11 +20,10 @@ public class CacheManager : ICacheManager
     private static readonly TimeSpan SlidingExpiration = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan AbsoluteExpiration = TimeSpan.FromHours(1);
 
-    public CacheManager(IMemoryCache memoryCache,
-        ConcurrentDictionary<string, CancellationTokenSource> prefixes)
+    public CacheManager(IMemoryCache memoryCache)
     {
         _memoryCache = memoryCache;
-        _prefixes = prefixes;
+        _prefixes = new ConcurrentDictionary<string, CancellationTokenSource>();
     }
 
     public CacheKey PrepareCacheKey(CacheKey key, params object[] parameters)
