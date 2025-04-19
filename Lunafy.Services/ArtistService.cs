@@ -11,12 +11,30 @@ namespace Lunafy.Services;
 [ScopeDependency(typeof(IArtistService))]
 public class ArtistService : IArtistService
 {
-    private readonly IRepository<Artist> _artistRepository;
+    #region Fields
 
-    public ArtistService(IRepository<Artist> artistRepository)
+    private readonly IRepository<Artist> _artistRepository;
+    private readonly IRepository<ArtistSongMapping> _artistSongMappingRepository;
+    private readonly IRepository<Song> _songRepository;
+
+    #endregion
+
+    #region Constructor
+
+    public ArtistService(IRepository<Artist> artistRepository,
+        IRepository<ArtistSongMapping> artistSongMappingRepository,
+        IRepository<Song> songRepository)
     {
         _artistRepository = artistRepository ?? throw new ArgumentNullException(nameof(artistRepository));
+        _artistSongMappingRepository = artistSongMappingRepository;
+        _songRepository = songRepository;
     }
+
+    #endregion
+
+    #region Methods
+
+    #region Artist FUCK Operations
 
     public async Task CreateArtistAsync(Artist artist)
     {
@@ -31,6 +49,14 @@ public class ArtistService : IArtistService
             return null;
 
         return await _artistRepository.GetByIdAsync(id, (cache) => default, includeDeleted: includeDeleted);
+    }
+
+    public async Task<IList<Artist>> GetArtistsByIdsAsync(IList<int> ids, bool includeDeleted = false)
+    {
+        if (ids is null || !ids.Any())
+            return [];
+
+        return await _artistRepository.GetByIdsAsync(ids, cache => default, includeDeleted);
     }
 
     public async Task<IList<Artist>> GetAllArtistsAsync(bool includeDeleted = false, bool sortByIdDesc = false)
@@ -93,4 +119,26 @@ public class ArtistService : IArtistService
 
         await _artistRepository.DeleteAsync(artist);
     }
+
+    public async Task<IPagedList<Song>> GetAllArtistSongsPagedAsync(int artistId, bool includeDeleted = false, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        pageIndex = int.Clamp(pageIndex, 0, int.MaxValue);
+        pageSize = int.Clamp(pageSize, 1, int.MaxValue);
+
+        if (artistId <= 0)
+            return new PagedList<Song>([], pageIndex, pageSize);
+
+        var songQuery = _songRepository.Table;
+        if (!includeDeleted)
+            songQuery = songQuery.Where(s => !s.Deleted);
+
+        return await _artistSongMappingRepository.Table
+            .Where(x => x.ArtistId == artistId)
+            .Join(songQuery, asm => asm.SongId, s => s.Id, (asm, s) => s)
+            .ToPagedListAsync();
+    }
+
+    #endregion
+
+    #endregion
 }

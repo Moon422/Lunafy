@@ -16,16 +16,20 @@ public class GenreService : IGenreService
     private readonly IRepository<Genre> _genreRepository;
     private readonly IRepository<GenreAlbumMapping> _genreAlbumMappingRepository;
     private readonly IRepository<Album> _albumRepository;
+    private readonly IRepository<GenreSongMapping> _genreSongMappingRepository;
+    private readonly IRepository<Song> _songRepository;
 
     #endregion
 
     #region Constructors
 
-    public GenreService(IRepository<Genre> genreRepository, IRepository<GenreAlbumMapping> genreAlbumMappingRepository, IRepository<Album> albumRepository)
+    public GenreService(IRepository<Genre> genreRepository, IRepository<GenreAlbumMapping> genreAlbumMappingRepository, IRepository<Album> albumRepository, IRepository<GenreSongMapping> genreSongMappingRepository, IRepository<Song> songRepository)
     {
-        _genreRepository = genreRepository ?? throw new ArgumentNullException(nameof(genreRepository));
+        _genreRepository = genreRepository;
         _genreAlbumMappingRepository = genreAlbumMappingRepository;
         _albumRepository = albumRepository;
+        _genreSongMappingRepository = genreSongMappingRepository;
+        _songRepository = songRepository;
     }
 
     #endregion
@@ -106,8 +110,8 @@ public class GenreService : IGenreService
 
     public async Task<IPagedList<Album>> GetAllGenreAlbumsPagedAsync(int genreId, int pageIndex = 0, int pageSize = int.MaxValue)
     {
-        pageIndex = pageIndex >= 0 ? pageIndex : 0;
-        pageSize = pageSize > 0 ? pageSize : 1;
+        pageIndex = int.Clamp(pageIndex, 0, int.MaxValue);
+        pageSize = int.Clamp(pageSize, 1, int.MaxValue);
 
         if (genreId <= 0)
             return new PagedList<Album>([], pageIndex, pageSize);
@@ -116,6 +120,20 @@ public class GenreService : IGenreService
             .Where(x => x.GenreId == genreId)
             .Join(_albumRepository.Table, gam => gam.AlbumId, a => a.Id, (gam, a) => a)
             .ToPagedListAsync(pageIndex, pageSize);
+    }
+
+    public async Task<IPagedList<Song>> GetAllGenreSongsPagedAsync(int genreId, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        pageIndex = int.Clamp(pageIndex, 0, int.MaxValue);
+        pageSize = int.Clamp(pageSize, 1, int.MaxValue);
+
+        if (genreId <= 0)
+            return new PagedList<Song>([], pageIndex, pageSize);
+
+        return await _genreSongMappingRepository.Table
+                    .Where(x => x.GenreId == genreId)
+                    .Join(_songRepository.Table, gsm => gsm.SongId, s => s.Id, (gsm, s) => s)
+                    .ToPagedListAsync(pageIndex, pageSize);
     }
 
     #endregion

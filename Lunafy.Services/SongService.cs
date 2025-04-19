@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Data;
+using Lunafy.Data.Caching;
+using Lunafy.Services.Caching;
 using Lunafy.Services.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,24 +15,45 @@ namespace Lunafy.Services;
 [ScopeDependency(typeof(ISongService))]
 public class SongService : ISongService
 {
+    #region Fields
+
     private readonly IRepository<Song> _songRepository;
     private readonly IRepository<GenreSongMapping> _genreSongMappingRepository;
     private readonly IRepository<ArtistSongMapping> _artistSongMappingRepository;
+    private readonly IRepository<Genre> _genreRepository;
+    private readonly IRepository<Artist> _artistRepository;
     private readonly IGenreService _genreService;
     private readonly IArtistService _artistService;
+    private readonly ICacheManager _cacheManager;
+
+    #endregion
+
+    #region Constructor
 
     public SongService(IRepository<Song> songRepository,
         IRepository<GenreSongMapping> genreSongMappingRepository,
         IRepository<ArtistSongMapping> artistSongMappingRepository,
+        IRepository<Genre> genreRepository,
+        IRepository<Artist> artistRepository,
         IGenreService genreService,
-        IArtistService artistService)
+        IArtistService artistService,
+        ICacheManager cacheManager)
     {
         _songRepository = songRepository ?? throw new ArgumentNullException(nameof(songRepository));
         _genreSongMappingRepository = genreSongMappingRepository;
         _artistSongMappingRepository = artistSongMappingRepository;
+        _genreRepository = genreRepository;
+        _artistRepository = artistRepository;
         _genreService = genreService;
         _artistService = artistService;
+        _cacheManager = cacheManager;
     }
+
+    #endregion
+
+    #region Methods
+
+    #region Song FUCK Operations
 
     public async Task CreateSongAsync(Song song)
     {
@@ -135,6 +158,10 @@ public class SongService : ISongService
         await _songRepository.DeleteAsync(song);
     }
 
+    #endregion
+
+    #region Song Genre FUCK Operations
+
     public async Task AddSongGenreAsync(int songId, int genreId)
     {
         Song? song;
@@ -171,6 +198,41 @@ public class SongService : ISongService
         await _genreSongMappingRepository.DeleteAsync(genreSongMapping);
     }
 
+    public async Task<IList<Genre>> GetAllSongGenresAsync(int songId)
+    {
+        if (songId <= 0)
+            return [];
+
+        var songGenreIdsCacheKey = _cacheManager.PrepareCacheKey(SongCacheDefaults.SongGenreIdsCacheKey,
+            songId);
+
+        var genreIds = await _cacheManager.GetAsync<int>(songGenreIdsCacheKey,
+            async () => await _genreSongMappingRepository.Table
+                .Where(gsm => gsm.SongId == songId)
+                .Select(gsm => gsm.GenreId)
+                .ToListAsync());
+
+        return await _genreService.GetGenresByIdsAsync(genreIds);
+    }
+
+    public async Task<IPagedList<Genre>> GetAllSongGenresPagedAsync(int songId, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        pageIndex = int.Clamp(pageIndex, 0, int.MaxValue);
+        pageSize = int.Clamp(pageSize, 1, int.MaxValue);
+
+        if (songId <= 0)
+            return new PagedList<Genre>([], pageIndex, pageSize);
+
+        return await _genreSongMappingRepository.Table
+            .Where(gsm => gsm.SongId == songId)
+            .Join(_genreRepository.Table, gsm => gsm.GenreId, g => g.Id, (gsm, g) => g)
+            .ToPagedListAsync(pageIndex, pageSize);
+    }
+
+    #endregion
+
+    #region Song Artist FUCK Operations
+
     public async Task AddSongArtistAsync(int songId, int artistId)
     {
         Song? song;
@@ -206,4 +268,43 @@ public class SongService : ISongService
 
         await _artistSongMappingRepository.DeleteAsync(artistSongMapping);
     }
+
+    public async Task<IList<Artist>> GetAllSongArtistsAsync(int songId, bool includeDeleted = false)
+    {
+        if (songId <= 0)
+            return [];
+
+        var songArtistIdsCacheKey = _cacheManager.PrepareCacheKey(SongCacheDefaults.SongArtistIdsCacheKey,
+            songId);
+
+        var artistIds = await _cacheManager.GetAsync<int>(songArtistIdsCacheKey,
+            async () => await _artistSongMappingRepository.Table
+                .Where(asm => asm.SongId == songId)
+                .Select(asm => asm.ArtistId)
+                .ToListAsync());
+
+        return await _artistService.GetArtistsByIdsAsync(artistIds, includeDeleted);
+    }
+
+    public async Task<IPagedList<Artist>> GetAllSongArtistsPagedAsync(int songId, bool includeDeleted = false, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        pageIndex = int.Clamp(pageIndex, 0, int.MaxValue);
+        pageSize = int.Clamp(pageSize, 1, int.MaxValue);
+
+        if (songId <= 0)
+            return new PagedList<Artist>([], pageIndex, pageSize);
+
+        var artistQuery = _artistRepository.Table;
+        if (!includeDeleted)
+            artistQuery = artistQuery.Where(a => !a.Deleted);
+
+        return await _artistSongMappingRepository.Table
+            .Where(asm => asm.SongId == songId)
+            .Join(artistQuery, asm => asm.ArtistId, a => a.Id, (asm, a) => a)
+            .ToPagedListAsync(pageIndex, pageSize);
+    }
+
+    #endregion
+
+    #endregion
 }

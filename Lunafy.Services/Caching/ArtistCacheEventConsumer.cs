@@ -12,6 +12,11 @@ public class ArtistCacheEventConsumer : CacheEventConsumer<Artist>
 
     protected override async Task ClearCacheAsync(Artist entity, EntityEventType entityEventType)
     {
+        if (entityEventType == EntityEventType.Delete)
+        {
+            await RemoveByPrefixAsync(SongCacheDefaults.SongArtistIdsPrefix);
+        }
+
         await base.ClearCacheAsync(entity, entityEventType);
     }
 }

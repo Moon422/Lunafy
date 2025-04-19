@@ -16,6 +16,7 @@ public class GenreCacheEventConsumer : CacheEventConsumer<Genre>
         if (entityEventType == EntityEventType.Delete)
         {
             await RemoveByPrefixAsync(AlbumCacheDefaults.AlbumGenreIdsPrefix);
+            await RemoveByPrefixAsync(SongCacheDefaults.SongGenreIdsPrefix);
         }
 
         await base.ClearCacheAsync(entity, entityEventType);
