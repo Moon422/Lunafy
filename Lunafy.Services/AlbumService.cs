@@ -13,9 +13,15 @@ namespace Lunafy.Services;
 [ScopeDependency(typeof(IAlbumService))]
 public class AlbumService : IAlbumService
 {
+    #region Fields
+
     private readonly IRepository<Album> _albumRepository;
     private readonly IRepository<GenreAlbumMapping> _genreAlbumMappingRepository;
     private readonly IGenreService _genreService;
+
+    #endregion
+
+    #region Constructor
 
     public AlbumService(IRepository<Album> albumRepository,
         IRepository<GenreAlbumMapping> genreAlbumMappingRepository,
@@ -25,6 +31,10 @@ public class AlbumService : IAlbumService
         _genreAlbumMappingRepository = genreAlbumMappingRepository;
         _genreService = genreService;
     }
+
+    #endregion
+
+    #region Region
 
     public async Task CreateAlbumAsync(Album album)
     {
@@ -162,4 +172,6 @@ public class AlbumService : IAlbumService
 
         await _genreAlbumMappingRepository.DeleteAsync(genreAlbumMapping);
     }
+
+    #endregion
 }
