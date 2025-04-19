@@ -16,6 +16,7 @@ public interface IAlbumService
     Task<IPagedList<Album>> FindAlbumsAsync(FindAlbumsCommand findCommand, bool? deleted = false);
     Task UpdateAlbumAsync(Album album);
     Task DeleteAlbumAsync(Album album);
+    Task<IPagedList<Artist>> GetAllAlbumArtistsPagedAsync(int albumId, bool includeDeleted, int pageIndex = 0, int pageSize = int.MaxValue);
 
     #endregion
 

@@ -16,6 +16,7 @@ public class ArtistService : IArtistService
     private readonly IRepository<Artist> _artistRepository;
     private readonly IRepository<ArtistSongMapping> _artistSongMappingRepository;
     private readonly IRepository<Song> _songRepository;
+    private readonly IRepository<Album> _albumRepository;
 
     #endregion
 
@@ -23,11 +24,13 @@ public class ArtistService : IArtistService
 
     public ArtistService(IRepository<Artist> artistRepository,
         IRepository<ArtistSongMapping> artistSongMappingRepository,
-        IRepository<Song> songRepository)
+        IRepository<Song> songRepository,
+        IRepository<Album> albumRepository)
     {
         _artistRepository = artistRepository ?? throw new ArgumentNullException(nameof(artistRepository));
         _artistSongMappingRepository = artistSongMappingRepository;
         _songRepository = songRepository;
+        _albumRepository = albumRepository;
     }
 
     #endregion
@@ -136,6 +139,29 @@ public class ArtistService : IArtistService
             .Where(x => x.ArtistId == artistId)
             .Join(songQuery, asm => asm.SongId, s => s.Id, (asm, s) => s)
             .ToPagedListAsync();
+    }
+
+    public async Task<IPagedList<Album>> GetAllArtistAlbumsPagedAsync(int artistId, bool includeDeleted = false, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        pageIndex = int.Clamp(pageIndex, 0, int.MaxValue);
+        pageSize = int.Clamp(pageSize, 1, int.MaxValue);
+
+        if (artistId <= 0)
+            return new PagedList<Album>([], pageIndex, pageSize);
+
+        var songQuery = _songRepository.Table;
+        if (!includeDeleted)
+            songQuery = songQuery.Where(s => !s.Deleted);
+
+        var albumQuery = _albumRepository.Table;
+        if (!includeDeleted)
+            albumQuery = albumQuery.Where(a => !a.Deleted);
+
+        return await _artistSongMappingRepository.Table
+            .Where(asm => asm.ArtistId == artistId)
+            .Join(songQuery, asm => asm.SongId, s => s.Id, (asm, s) => s)
+            .Join(albumQuery, s => s.AlbumId, a => a.Id, (s, a) => a)
+            .ToPagedListAsync(pageIndex, pageSize);
     }
 
     #endregion

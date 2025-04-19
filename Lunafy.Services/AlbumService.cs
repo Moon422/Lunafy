@@ -21,6 +21,9 @@ public class AlbumService : IAlbumService
     private readonly IRepository<Album> _albumRepository;
     private readonly IRepository<GenreAlbumMapping> _genreAlbumMappingRepository;
     private readonly IRepository<Genre> _genreRepository;
+    private readonly IRepository<Song> _songRepository;
+    private readonly IRepository<ArtistSongMapping> _artistSongMappingRepository;
+    private readonly IRepository<Artist> _artistRepository;
     private readonly IGenreService _genreService;
     private readonly ICacheManager _cacheManager;
 
@@ -31,12 +34,18 @@ public class AlbumService : IAlbumService
     public AlbumService(IRepository<Album> albumRepository,
         IRepository<GenreAlbumMapping> genreAlbumMappingRepository,
         IRepository<Genre> genreRepository,
+        IRepository<Song> songRepository,
+        IRepository<ArtistSongMapping> artistSongMappingRepository,
+        IRepository<Artist> artistRepository,
         IGenreService genreService,
         ICacheManager cacheManager)
     {
         _albumRepository = albumRepository;
         _genreAlbumMappingRepository = genreAlbumMappingRepository;
         _genreRepository = genreRepository;
+        _songRepository = songRepository;
+        _artistSongMappingRepository = artistSongMappingRepository;
+        _artistRepository = artistRepository;
         _genreService = genreService;
         _cacheManager = cacheManager;
     }
@@ -146,6 +155,30 @@ public class AlbumService : IAlbumService
         ArgumentNullException.ThrowIfNull(album, nameof(album));
 
         await _albumRepository.DeleteAsync(album);
+    }
+
+    public async Task<IPagedList<Artist>> GetAllAlbumArtistsPagedAsync(int albumId, bool includeDeleted, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        pageIndex = int.Clamp(pageIndex, 0, int.MaxValue);
+        pageSize = int.Clamp(pageSize, 1, int.MaxValue);
+
+        if (albumId <= 0)
+            return new PagedList<Artist>([], pageIndex, pageSize);
+
+        var songQuery = _songRepository.Table
+            .Where(s => s.AlbumId == albumId);
+        if (!includeDeleted)
+            songQuery = songQuery.Where(s => !s.Deleted);
+
+        var artistQuery = _artistRepository.Table;
+
+        if (!includeDeleted)
+            artistQuery = artistQuery.Where(a => !a.Deleted);
+
+        return await songQuery
+            .Join(_artistSongMappingRepository.Table, s => s.Id, asm => asm.SongId, (s, asm) => asm.ArtistId)
+            .Join(artistQuery, aid => aid, a => a.Id, (aid, a) => a)
+            .ToPagedListAsync(pageIndex, pageSize);
     }
 
     #endregion

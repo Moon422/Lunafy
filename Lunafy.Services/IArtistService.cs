@@ -16,4 +16,5 @@ public interface IArtistService
     Task UpdateArtistAsync(Artist artist);
     Task DeleteArtistAsync(Artist artist);
     Task<IPagedList<Song>> GetAllArtistSongsPagedAsync(int artistId, bool includeDeleted = false, int pageIndex = 0, int pageSize = int.MaxValue);
+    Task<IPagedList<Album>> GetAllArtistAlbumsPagedAsync(int artistId, bool includeDeleted = false, int pageIndex = 0, int pageSize = int.MaxValue);
 }
