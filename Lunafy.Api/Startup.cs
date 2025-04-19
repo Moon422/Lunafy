@@ -38,6 +38,8 @@ public class Startup
 
         services.RegisterServices();
 
+        services.RegisterEventConsumers();
+
         services.AddAutoMapper(typeof(Startup));
 
         services.AddControllers();

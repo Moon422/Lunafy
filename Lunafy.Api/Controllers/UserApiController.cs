@@ -34,7 +34,9 @@ public class UserApiController : ControllerBase
     [HttpPost("[action]")]
     public async Task<IActionResult> Register([FromBody] RegistrationModel model)
     {
-        var user = await _userService.GetUserByEmailUsernameAsync(model.Email, model.Username);
+        var user = (await _userService.GetUserByEmailAsync(model.Email))
+            ?? await _userService.GetUserByUseranmeAsync(model.Username);
+
         if (user is not null)
         {
             return BadRequest("User with email or username already exists.");

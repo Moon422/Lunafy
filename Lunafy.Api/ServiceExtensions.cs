@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Security;
 using System.Reflection;
 using Lunafy.Core.Infrastructure.Dependencies;
+using Lunafy.Services.Events;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lunafy.Api;
@@ -64,6 +66,57 @@ public static class ServiceExtensions
             catch (Exception ex)
             {
                 Console.WriteLine($"Error scanning assembly {assembly.GetName().Name}: {ex.Message}");
+            }
+        }
+
+        return services;
+    }
+
+    public static IServiceCollection RegisterEventConsumers(this IServiceCollection services)
+    {
+        var currentAssembly = Assembly.GetExecutingAssembly();
+        var assemblies = new List<Assembly> { currentAssembly };
+        assemblies.AddRange(currentAssembly.GetReferencedAssemblies()
+            .Select(Assembly.Load)
+            .Where(a => a != null));
+
+        var consumerInterfaceType = typeof(IConsumer<>);
+
+        bool DoesTypeImplementOpenGeneric(Type type, Type openGeneric)
+        {
+            try
+            {
+                var genericTypeDefinition = openGeneric.GetGenericTypeDefinition();
+                return type.FindInterfaces((_, _) => true, null)
+                    .Where(implementedInterface => implementedInterface.IsGenericType).Any(implementedInterface =>
+                        genericTypeDefinition.IsAssignableFrom(implementedInterface.GetGenericTypeDefinition()));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        foreach (var assembly in assemblies)
+        {
+            var types = assembly.GetTypes();
+
+            foreach (var type in types)
+            {
+                if (!consumerInterfaceType.IsAssignableFrom(type) &&
+                    (!consumerInterfaceType.IsGenericTypeDefinition ||
+                    DoesTypeImplementOpenGeneric(consumerInterfaceType, consumerInterfaceType)))
+                    continue;
+
+                if (type.IsInterface || type.IsAbstract)
+                    continue;
+
+                foreach (var findInterface in type.FindInterfaces((type, criteria) =>
+                    {
+                        var isMatch = type.IsGenericType && ((Type)criteria).IsAssignableFrom(type.GetGenericTypeDefinition());
+                        return isMatch;
+                    }, typeof(IConsumer<>)))
+                    services.AddScoped(findInterface, type);
             }
         }
 

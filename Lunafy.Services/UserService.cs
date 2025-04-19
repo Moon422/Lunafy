@@ -166,16 +166,27 @@ public class UserService : IUserService
         await _userRepository.DeleteAsync(user);
     }
 
-    public async Task<User?> GetUserByEmailUsernameAsync(string email, string username)
+    public async Task<User?> GetUserByEmailAsync(string email)
     {
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(username))
+        if (string.IsNullOrWhiteSpace(email))
             return null;
 
-        var cacheKey = _cacheManager.PrepareCacheKey(UserCacheDefaults.ByEmailUsernameCacheKey,
-            email, username);
+        var cacheKey = _cacheManager.PrepareCacheKey(UserCacheDefaults.ByEmailCacheKey,
+            email);
 
         return await _cacheManager.GetAsync(cacheKey, async () => await _userRepository.Table
-            .FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower()
-                && x.Username.ToLower() == username.ToLower()));
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower()));
+    }
+
+    public async Task<User?> GetUserByUseranmeAsync(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+            return null;
+
+        var cacheKey = _cacheManager.PrepareCacheKey(UserCacheDefaults.ByUsernameCacheKey,
+            username);
+
+        return await _cacheManager.GetAsync(cacheKey, async () => await _userRepository.Table
+            .FirstOrDefaultAsync(x => x.Username.ToLower() == username.ToLower()));
     }
 }

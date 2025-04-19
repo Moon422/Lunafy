@@ -14,7 +14,8 @@ public class UserCacheEventConsumer : CacheEventConsumer<User>
     {
         if (entityEventType == EntityEventType.Delete || entityEventType == EntityEventType.Update)
         {
-            await RemoveByPrefixAsync(UserCacheDefaults.ByEmailUsernamePrefix);
+            await RemoveByPrefixAsync(UserCacheDefaults.ByEmailPrefix);
+            await RemoveByPrefixAsync(UserCacheDefaults.ByUsernamePrefix);
         }
 
         await base.ClearCacheAsync(entity, entityEventType);

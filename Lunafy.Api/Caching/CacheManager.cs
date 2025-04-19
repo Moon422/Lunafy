@@ -33,29 +33,36 @@ public class CacheManager : ICacheManager
 
     public async Task<T?> GetAsync<T>(CacheKey key, Func<Task<T?>> fetch)
     {
-        return await _memoryCache.GetOrCreateAsync(key.Key, async entry =>
+        if (_memoryCache.TryGetValue<T>(key.Key, out var result) && result is not null)
         {
-            var result = await fetch();
-
-            entry.SlidingExpiration = SlidingExpiration;
-            entry.AbsoluteExpirationRelativeToNow = AbsoluteExpiration;
-
-            if (string.IsNullOrWhiteSpace(key.Prefix))
-            {
-                return result;
-            }
-
-            if (_prefixes.TryGetValue(key.Prefix, out var cts) && cts is not null)
-            {
-                entry.AddExpirationToken(new CancellationChangeToken(cts.Token));
-                return result;
-            }
-
-            cts = new CancellationTokenSource();
-            entry.AddExpirationToken(new CancellationChangeToken(cts.Token));
-            _prefixes[key.Prefix] = cts;
             return result;
-        });
+        }
+
+        result = await fetch();
+        if (result is null)
+        {
+            return result;
+        }
+
+        var options = new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = SlidingExpiration,
+            AbsoluteExpirationRelativeToNow = AbsoluteExpiration
+        };
+
+        if (string.IsNullOrWhiteSpace(key.Prefix))
+        {
+            return _memoryCache.Set(key.Key, result, options);
+        }
+
+        if (!_prefixes.TryGetValue(key.Prefix, out var cts) || cts is null)
+        {
+            cts = new CancellationTokenSource();
+            _prefixes[key.Prefix] = cts;
+        }
+
+        options.AddExpirationToken(new CancellationChangeToken(cts.Token));
+        return _memoryCache.Set(key.Key, result, options);
     }
 
     public async Task<IList<T>> GetAsync<T>(CacheKey key, Func<Task<IList<T>>> fetch)
