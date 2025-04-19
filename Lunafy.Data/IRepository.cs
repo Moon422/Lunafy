@@ -16,7 +16,7 @@ public interface IRepository<T> where T : BaseEntity
 
     Task<IList<T>> GetAllAsync(Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false);
 
-    Task<IList<T>> GetAllAsync(Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false);
+    Task<IList<T>> GetAllAsync(Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false);
 
     Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false);
 

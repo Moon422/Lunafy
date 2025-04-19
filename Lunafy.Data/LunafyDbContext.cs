@@ -16,6 +16,8 @@ public class LunafyDbContext : DbContext
     public DbSet<ArtistSongMapping> ArtistSongMappings { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Role> Roles { get; set; }
+    public DbSet<RoleUserMapping> RoleUserMappings { get; set; }
 
     public LunafyDbContext(DbContextOptions options)
         : base(options)
@@ -93,5 +95,21 @@ public class LunafyDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
         });
+
+        modelBuilder.Entity<RoleUserMapping>(entity =>
+            {
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                entity.HasOne<Role>()
+                    .WithMany()
+                    .HasForeignKey(e => e.RoleId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            }
+        );
     }
 }

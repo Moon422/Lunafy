@@ -69,6 +69,12 @@ public class UserApiController : ControllerBase
             new Claim(ClaimTypes.Email, user.Email)
         };
 
+        var roles = await _userService.GetUserRolesAsync(user.Id);
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role.Name));
+        }
+
         var secret = _configuration.GetSection("Secret").Value
             ?? throw new InvalidOperationException();
 

@@ -17,14 +17,20 @@ public class UserService : IUserService
 {
     private readonly IRepository<User> _userRepository;
     private readonly IRepository<Auth> _authRepository;
+    private readonly IRepository<RoleUserMapping> _roleUserMappingRepository;
+    private readonly IRoleService _roleService;
     private readonly ICacheManager _cacheManager;
 
     public UserService(IRepository<User> userRepository,
         IRepository<Auth> authRepository,
+        IRepository<RoleUserMapping> roleUserMapping,
+        IRoleService roleService,
         ICacheManager cacheManager)
     {
         _userRepository = userRepository;
         _authRepository = authRepository;
+        _roleUserMappingRepository = roleUserMapping;
+        _roleService = roleService;
         _cacheManager = cacheManager;
     }
 
@@ -188,5 +194,37 @@ public class UserService : IUserService
 
         return await _cacheManager.GetAsync(cacheKey, async () => await _userRepository.Table
             .FirstOrDefaultAsync(x => x.Username.ToLower() == username.ToLower()));
+    }
+
+    public async Task AddRoleToUserAsync(int userId, int roleId)
+    {
+        User? user;
+        if (userId <= 0 || (user = await GetUserByIdAsync(userId)) is null)
+        {
+            throw new EntityNotFoundException(nameof(User));
+        }
+
+        Role? role;
+        if (roleId <= 0 || (role = await _roleService.GetRoleByIdAsync(roleId)) is null)
+        {
+            throw new EntityNotFoundException(nameof(Role));
+        }
+
+        await _roleUserMappingRepository.InsertAsync(new RoleUserMapping { UserId = user.Id, RoleId = role.Id });
+    }
+
+    public async Task<IList<Role>> GetUserRolesAsync(int userId)
+    {
+        if (userId <= 0)
+        {
+            return [];
+        }
+
+        var roleIds = await _roleUserMappingRepository.Table
+            .Where(x => x.UserId == userId)
+            .Select(x => x.RoleId)
+            .ToListAsync();
+
+        return await _roleService.GetRolesByIdsAsync(roleIds);
     }
 }

@@ -18,4 +18,6 @@ public interface IUserService
     Task DeleteUserAsync(User user);
     Task<User?> GetUserByEmailAsync(string email);
     Task<User?> GetUserByUseranmeAsync(string username);
+    Task AddRoleToUserAsync(int userId, int roleId);
+    Task<IList<Role>> GetUserRolesAsync(int userId);
 }
