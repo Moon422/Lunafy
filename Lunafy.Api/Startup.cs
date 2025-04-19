@@ -20,6 +20,8 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddHttpContextAccessor();
+
         services.AddMemoryCache();
 
         services.AddDbContext<LunafyDbContext>(options =>
