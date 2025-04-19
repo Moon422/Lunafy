@@ -17,8 +17,8 @@ public interface IGenreService
     Task<IPagedList<Genre>> FindGenresAsync(FindGenresCommand findCommand);
     Task UpdateGenreAsync(Genre genre);
     Task DeleteGenreAsync(Genre genre);
-    Task<IPagedList<Album>> GetAllGenreAlbumsPagedAsync(int genreId, int pageIndex = 0, int pageSize = int.MaxValue);
-    Task<IPagedList<Song>> GetAllGenreSongsPagedAsync(int genreId, int pageIndex = 0, int pageSize = int.MaxValue);
+    Task<IPagedList<Album>> GetAllGenreAlbumsPagedAsync(int genreId, bool includeDeleted = false, int pageIndex = 0, int pageSize = int.MaxValue);
+    Task<IPagedList<Song>> GetAllGenreSongsPagedAsync(int genreId, bool includeDeleted = false, int pageIndex = 0, int pageSize = int.MaxValue);
 
     #endregion
 }

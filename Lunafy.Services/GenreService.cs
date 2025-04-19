@@ -108,7 +108,7 @@ public class GenreService : IGenreService
         await _genreRepository.DeleteAsync(genre);
     }
 
-    public async Task<IPagedList<Album>> GetAllGenreAlbumsPagedAsync(int genreId, int pageIndex = 0, int pageSize = int.MaxValue)
+    public async Task<IPagedList<Album>> GetAllGenreAlbumsPagedAsync(int genreId, bool includeDeleted = false, int pageIndex = 0, int pageSize = int.MaxValue)
     {
         pageIndex = int.Clamp(pageIndex, 0, int.MaxValue);
         pageSize = int.Clamp(pageSize, 1, int.MaxValue);
@@ -116,13 +116,17 @@ public class GenreService : IGenreService
         if (genreId <= 0)
             return new PagedList<Album>([], pageIndex, pageSize);
 
+        var albumQuery = _albumRepository.Table;
+        if (!includeDeleted)
+            albumQuery = albumQuery.Where(a => !a.Deleted);
+
         return await _genreAlbumMappingRepository.Table
             .Where(x => x.GenreId == genreId)
-            .Join(_albumRepository.Table, gam => gam.AlbumId, a => a.Id, (gam, a) => a)
+            .Join(albumQuery, gam => gam.AlbumId, a => a.Id, (gam, a) => a)
             .ToPagedListAsync(pageIndex, pageSize);
     }
 
-    public async Task<IPagedList<Song>> GetAllGenreSongsPagedAsync(int genreId, int pageIndex = 0, int pageSize = int.MaxValue)
+    public async Task<IPagedList<Song>> GetAllGenreSongsPagedAsync(int genreId, bool includeDeleted = false, int pageIndex = 0, int pageSize = int.MaxValue)
     {
         pageIndex = int.Clamp(pageIndex, 0, int.MaxValue);
         pageSize = int.Clamp(pageSize, 1, int.MaxValue);
@@ -130,10 +134,14 @@ public class GenreService : IGenreService
         if (genreId <= 0)
             return new PagedList<Song>([], pageIndex, pageSize);
 
+        var songQuery = _songRepository.Table;
+        if (!includeDeleted)
+            songQuery = songQuery.Where(s => !s.Deleted);
+
         return await _genreSongMappingRepository.Table
-                    .Where(x => x.GenreId == genreId)
-                    .Join(_songRepository.Table, gsm => gsm.SongId, s => s.Id, (gsm, s) => s)
-                    .ToPagedListAsync(pageIndex, pageSize);
+            .Where(x => x.GenreId == genreId)
+            .Join(songQuery, gsm => gsm.SongId, s => s.Id, (gsm, s) => s)
+            .ToPagedListAsync(pageIndex, pageSize);
     }
 
     #endregion
