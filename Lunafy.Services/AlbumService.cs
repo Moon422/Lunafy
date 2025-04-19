@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO.Pipes;
 using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Data;
+using Lunafy.Data.Caching;
+using Lunafy.Services.Caching;
 using Lunafy.Services.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +20,9 @@ public class AlbumService : IAlbumService
 
     private readonly IRepository<Album> _albumRepository;
     private readonly IRepository<GenreAlbumMapping> _genreAlbumMappingRepository;
+    private readonly IRepository<Genre> _genreRepository;
     private readonly IGenreService _genreService;
+    private readonly ICacheManager _cacheManager;
 
     #endregion
 
@@ -25,16 +30,22 @@ public class AlbumService : IAlbumService
 
     public AlbumService(IRepository<Album> albumRepository,
         IRepository<GenreAlbumMapping> genreAlbumMappingRepository,
-        IGenreService genreService)
+        IRepository<Genre> genreRepository,
+        IGenreService genreService,
+        ICacheManager cacheManager)
     {
         _albumRepository = albumRepository;
         _genreAlbumMappingRepository = genreAlbumMappingRepository;
+        _genreRepository = genreRepository;
         _genreService = genreService;
+        _cacheManager = cacheManager;
     }
 
     #endregion
 
-    #region Region
+    #region Methods
+
+    #region Album FUCK Operations
 
     public async Task CreateAlbumAsync(Album album)
     {
@@ -137,6 +148,10 @@ public class AlbumService : IAlbumService
         await _albumRepository.DeleteAsync(album);
     }
 
+    #endregion
+
+    #region Album Genre Operations
+
     public async Task AddAlbumGenreAsync(int albumId, int genreId)
     {
         Album? album;
@@ -172,6 +187,42 @@ public class AlbumService : IAlbumService
 
         await _genreAlbumMappingRepository.DeleteAsync(genreAlbumMapping);
     }
+
+    public async Task<IList<Genre>> GetAllAlbumGenresAsync(int albumId)
+    {
+        if (albumId <= 0)
+            return [];
+
+        var albumGenreIdsCacheKey = _cacheManager.PrepareCacheKey(AlbumCacheDefaults.AlbumGenreIdsCacheKey,
+            albumId);
+
+        var genreIds = await _cacheManager.GetAsync<int>(albumGenreIdsCacheKey,
+            async () => await _genreAlbumMappingRepository.Table
+                .Where(x => x.AlbumId == albumId)
+                .Select(x => x.GenreId)
+                .ToListAsync());
+
+        if (!genreIds.Any())
+            return [];
+
+        return await _genreService.GetGenresByIdsAsync(genreIds);
+    }
+
+    public async Task<IPagedList<Genre>> GetAllAlbumGenresPagedAsync(int albumId, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        pageIndex = pageIndex >= 0 ? pageIndex : 0;
+        pageSize = pageSize > 0 ? pageSize : 1;
+
+        if (albumId <= 0)
+            return new PagedList<Genre>([], pageIndex, pageSize);
+
+        return await _genreAlbumMappingRepository.Table
+            .Where(gam => gam.AlbumId == albumId)
+            .Join(_genreRepository.Table, gam => gam.GenreId, g => g.Id, (gam, g) => g)
+            .ToPagedListAsync(pageIndex, pageSize);
+    }
+
+    #endregion
 
     #endregion
 }

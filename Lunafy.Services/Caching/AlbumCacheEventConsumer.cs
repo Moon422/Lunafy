@@ -12,6 +12,11 @@ public class AlbumCacheEventConsumer : CacheEventConsumer<Album>
 
     protected override async Task ClearCacheAsync(Album entity, EntityEventType entityEventType)
     {
+        if (entityEventType == EntityEventType.Delete)
+        {
+            await RemoveByPrefixAsync(AlbumCacheDefaults.AlbumGenreIdsPrefix);
+        }
+
         await base.ClearCacheAsync(entity, entityEventType);
     }
 }

@@ -11,12 +11,23 @@ namespace Lunafy.Services;
 [ScopeDependency(typeof(IGenreService))]
 public class GenreService : IGenreService
 {
+    #region Fields
+
     private readonly IRepository<Genre> _genreRepository;
+
+    #endregion
+
+    #region Constructors
 
     public GenreService(IRepository<Genre> genreRepository)
     {
         _genreRepository = genreRepository ?? throw new ArgumentNullException(nameof(genreRepository));
     }
+
+    #endregion
+
+
+    #region Genre FUCK Operations
 
     public async Task CreateGenreAsync(Genre genre)
     {
@@ -31,6 +42,14 @@ public class GenreService : IGenreService
             return null;
 
         return await _genreRepository.GetByIdAsync(id, (cache) => default);
+    }
+
+    public async Task<IList<Genre>> GetGenresByIdsAsync(IList<int> ids)
+    {
+        if (ids is null || !ids.Any())
+            return [];
+
+        return await _genreRepository.GetByIdsAsync(ids, cache => default);
     }
 
     public async Task<IList<Genre>> GetAllGenresAsync(bool includeDeleted = false, bool sortByIdDesc = false)
@@ -81,4 +100,6 @@ public class GenreService : IGenreService
 
         await _genreRepository.DeleteAsync(genre);
     }
+
+    #endregion
 }

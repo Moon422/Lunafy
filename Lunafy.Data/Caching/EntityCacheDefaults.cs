@@ -22,5 +22,5 @@ public static partial class EntityCacheDefaults<T> where T : BaseEntity
 
     public static string AllPrefix => $"Lunafy.{EntityTypeName}.all";
 
-    public static string AllPagedPrefix => $"Lunafy.{EntityTypeName}.all.paged.{{0}}.{{1}}";
+    public static string AllPagedPrefix => $"Lunafy.{EntityTypeName}.all.paged.";
 }

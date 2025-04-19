@@ -31,7 +31,7 @@ public class CacheManager : ICacheManager
         return new CacheKey(string.Format(key.Key, parameters), key.Prefix);
     }
 
-    public async Task<T?> GetAsync<T>(CacheKey key, Func<Task<T?>> fetch) where T : BaseEntity
+    public async Task<T?> GetAsync<T>(CacheKey key, Func<Task<T?>> fetch)
     {
         return await _memoryCache.GetOrCreateAsync(key.Key, async entry =>
         {
@@ -58,7 +58,7 @@ public class CacheManager : ICacheManager
         });
     }
 
-    public async Task<IList<T>> GetAsync<T>(CacheKey key, Func<Task<IList<T>>> fetch) where T : BaseEntity
+    public async Task<IList<T>> GetAsync<T>(CacheKey key, Func<Task<IList<T>>> fetch)
     {
         return await _memoryCache.GetOrCreateAsync(key.Key, async entry =>
         {

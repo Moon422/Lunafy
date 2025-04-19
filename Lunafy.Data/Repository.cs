@@ -131,7 +131,9 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
                 query = query.OrderBy(e => e.Id);
             }
 
-            return await query.Skip(pageIndex).Take(pageSize).ToListAsync();
+            return await query.Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
         };
 
         if (getCacheKey is null)
@@ -166,7 +168,9 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
                 query = query.OrderBy(e => e.Id);
             }
 
-            return await query.ToListAsync();
+            return await query.Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
         };
 
         if (getCacheKey is null)
