@@ -5,7 +5,7 @@ namespace Lunafy.Services.Caching;
 
 public static class UserCacheDefaults
 {
-    public static string EntityTypeName => EntityCacheDefaults<Song>.EntityTypeName;
+    public static string EntityTypeName => EntityCacheDefaults<User>.EntityTypeName;
 
     public static CacheKey ByEmailCacheKey => new($"Lunafy.{EntityTypeName}.ByEmail.{{0}}", ByEmailPrefix);
 

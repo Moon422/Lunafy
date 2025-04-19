@@ -1,5 +1,6 @@
 using Lunafy.Core.Domains;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Lunafy.Data;
 
@@ -14,6 +15,7 @@ public class LunafyDbContext : DbContext
     public DbSet<Song> Songs { get; set; }
     public DbSet<ArtistSongMapping> ArtistSongMappings { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public LunafyDbContext(DbContextOptions options)
         : base(options)
@@ -72,6 +74,24 @@ public class LunafyDbContext : DbContext
                 .WithMany()
                 .UsingEntity<ArtistSongMapping>(r => r.HasOne<Artist>().WithMany().HasForeignKey(e => e.ArtistId).OnDelete(DeleteBehavior.Cascade).IsRequired(),
                     l => l.HasOne<Song>().WithMany().HasForeignKey(e => e.SongId).OnDelete(DeleteBehavior.Cascade).IsRequired());
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.Property(e => e.Token)
+                .HasMaxLength(32)
+                .IsFixedLength()
+                .IsRequired();
+
+            entity.Property(e => e.IsValid)
+                .HasDefaultValue(true)
+                .IsRequired();
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
         });
     }
 }
