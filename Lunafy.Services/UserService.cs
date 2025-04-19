@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Data;
+using Lunafy.Data.Caching;
+using Lunafy.Services.Caching;
 using Lunafy.Services.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,12 +17,15 @@ public class UserService : IUserService
 {
     private readonly IRepository<User> _userRepository;
     private readonly IRepository<Auth> _authRepository;
+    private readonly ICacheManager _cacheManager;
 
     public UserService(IRepository<User> userRepository,
-        IRepository<Auth> authRepository)
+        IRepository<Auth> authRepository,
+        ICacheManager cacheManager)
     {
         _userRepository = userRepository;
         _authRepository = authRepository;
+        _cacheManager = cacheManager;
     }
 
     public async Task CreateUserAsync(User user)
@@ -159,5 +164,18 @@ public class UserService : IUserService
         ArgumentNullException.ThrowIfNull(user, nameof(user));
 
         await _userRepository.DeleteAsync(user);
+    }
+
+    public async Task<User?> GetUserByEmailUsernameAsync(string email, string username)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(username))
+            return null;
+
+        var cacheKey = _cacheManager.PrepareCacheKey(UserCacheDefaults.ByEmailUsernameCacheKey,
+            email, username);
+
+        return await _cacheManager.GetAsync(cacheKey, async () => await _userRepository.Table
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower()
+                && x.Username.ToLower() == username.ToLower()));
     }
 }

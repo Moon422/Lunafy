@@ -38,6 +38,8 @@ public class Startup
 
         services.RegisterServices();
 
+        services.AddAutoMapper(typeof(Startup));
+
         services.AddControllers();
 
         services.AddSwaggerGen(c =>

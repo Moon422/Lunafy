@@ -12,6 +12,11 @@ public class UserCacheEventConsumer : CacheEventConsumer<User>
 
     protected override async Task ClearCacheAsync(User entity, EntityEventType entityEventType)
     {
+        if (entityEventType == EntityEventType.Delete || entityEventType == EntityEventType.Update)
+        {
+            await RemoveByPrefixAsync(UserCacheDefaults.ByEmailUsernamePrefix);
+        }
+
         await base.ClearCacheAsync(entity, entityEventType);
     }
 }

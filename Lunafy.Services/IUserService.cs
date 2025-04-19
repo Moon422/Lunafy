@@ -16,4 +16,5 @@ public interface IUserService
     Task<IPagedList<User>> FindUsersAsync(FindUsersCommand findCommand, bool? deleted = false);
     Task UpdateUserAsync(User user);
     Task DeleteUserAsync(User user);
+    Task<User?> GetUserByEmailUsernameAsync(string email, string username);
 }
