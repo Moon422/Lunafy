@@ -14,18 +14,21 @@ public class GenreService : IGenreService
     #region Fields
 
     private readonly IRepository<Genre> _genreRepository;
+    private readonly IRepository<GenreAlbumMapping> _genreAlbumMappingRepository;
+    private readonly IRepository<Album> _albumRepository;
 
     #endregion
 
     #region Constructors
 
-    public GenreService(IRepository<Genre> genreRepository)
+    public GenreService(IRepository<Genre> genreRepository, IRepository<GenreAlbumMapping> genreAlbumMappingRepository, IRepository<Album> albumRepository)
     {
         _genreRepository = genreRepository ?? throw new ArgumentNullException(nameof(genreRepository));
+        _genreAlbumMappingRepository = genreAlbumMappingRepository;
+        _albumRepository = albumRepository;
     }
 
     #endregion
-
 
     #region Genre FUCK Operations
 
@@ -99,6 +102,20 @@ public class GenreService : IGenreService
         ArgumentNullException.ThrowIfNull(genre, nameof(genre));
 
         await _genreRepository.DeleteAsync(genre);
+    }
+
+    public async Task<IPagedList<Album>> GetAllGenreAlbumsPagedAsync(int genreId, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        pageIndex = pageIndex >= 0 ? pageIndex : 0;
+        pageSize = pageSize > 0 ? pageSize : 1;
+
+        if (genreId <= 0)
+            return new PagedList<Album>([], pageIndex, pageSize);
+
+        return await _genreAlbumMappingRepository.Table
+            .Where(x => x.GenreId == genreId)
+            .Join(_albumRepository.Table, gam => gam.AlbumId, a => a.Id, (gam, a) => a)
+            .ToPagedListAsync(pageIndex, pageSize);
     }
 
     #endregion
