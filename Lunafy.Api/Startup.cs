@@ -68,6 +68,8 @@ public class Startup
             });
         }
 
+        app.UseStaticFiles();
+
         app.UseRouting();
 
         app.UseAuthentication();

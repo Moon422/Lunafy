@@ -1,8 +1,8 @@
-using Lunafy.Core.Domains;
+using System.Collections.Generic;
 
 namespace Lunafy.Data;
 
-public interface IPagedList<T> where T : BaseEntity
+public interface IPagedList<T> : IList<T>
 {
     public int PageIndex { get; set; }
     public int TotalItems { get; }

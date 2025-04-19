@@ -4,7 +4,7 @@ using Lunafy.Core.Domains;
 
 namespace Lunafy.Data;
 
-public class PagedList<T> : List<T>, IPagedList<T> where T : BaseEntity
+public class PagedList<T> : List<T>, IPagedList<T>
 {
     public int PageIndex { get; set; }
     public int PageSize { get; set; }

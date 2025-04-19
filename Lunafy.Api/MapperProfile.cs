@@ -1,4 +1,5 @@
 using AutoMapper;
+using Lunafy.Api.Models.Artist;
 using Lunafy.Api.Models.User;
 using Lunafy.Core.Domains;
 
@@ -10,5 +11,7 @@ public class MapperProfile : Profile
     {
         CreateMap<RegistrationModel, User>();
         CreateMap<User, UserModel>();
+        CreateMap<Artist, ArtistReadModel>();
+        CreateMap<ArtistWriteModel, Artist>();
     }
 }
