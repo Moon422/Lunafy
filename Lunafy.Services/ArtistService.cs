@@ -82,7 +82,7 @@ public class ArtistService : IArtistService
         Func<IQueryable<Artist>, IQueryable<Artist>> queryFunc = query =>
         {
             if (deleted.HasValue)
-                query = query.Where(a => a.Deleted != deleted);
+                query = query.Where(a => a.Deleted == deleted);
 
             if (!string.IsNullOrWhiteSpace(findCommand.Firstname))
             {

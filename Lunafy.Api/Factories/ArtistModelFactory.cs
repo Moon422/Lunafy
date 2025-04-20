@@ -29,15 +29,6 @@ public class ArtistModelFactory : IArtistModelFactory
         _artistService = artistService;
     }
 
-    private FindArtistsCommand ArtistSearchToFindCommand(ArtistSearchCommand command)
-    {
-        return new FindArtistsCommand
-        {
-            PageNumber = command.PageNumber,
-            PageSize = command.PageSize
-        };
-    }
-
     private string PrepareProfileImageUrl(Artist artist, int width)
     {
         var httpContext = _httpContextAccessor.HttpContext
@@ -64,7 +55,7 @@ public class ArtistModelFactory : IArtistModelFactory
     {
         ArgumentNullException.ThrowIfNull(command, nameof(command));
 
-        var findArtistCommand = ArtistSearchToFindCommand(command);
+        var findArtistCommand = _mapper.Map<FindArtistsCommand>(command);
         var artistsResult = await _artistService.FindArtistsAsync(findArtistCommand, false);
 
         var artistModels = new List<ArtistReadModel>();

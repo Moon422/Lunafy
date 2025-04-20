@@ -90,7 +90,7 @@ public class SongService : ISongService
         Func<IQueryable<Song>, IQueryable<Song>> queryFunc = query =>
         {
             if (deleted.HasValue)
-                query = query.Where(s => s.Deleted != deleted);
+                query = query.Where(s => s.Deleted == deleted);
 
             if (!string.IsNullOrWhiteSpace(findCommand.Title))
             {

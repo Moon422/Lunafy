@@ -93,7 +93,7 @@ public class AlbumService : IAlbumService
             var name = findCommand.Name?.ToLower();
 
             if (deleted.HasValue)
-                query = query.Where(a => a.Deleted != deleted);
+                query = query.Where(a => a.Deleted == deleted);
 
             if (!string.IsNullOrWhiteSpace(name))
             {

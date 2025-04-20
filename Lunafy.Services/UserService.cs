@@ -120,7 +120,7 @@ public class UserService : IUserService
         Func<IQueryable<User>, IQueryable<User>> queryFunc = query =>
         {
             if (deleted.HasValue)
-                query = query.Where(u => u.Deleted != deleted);
+                query = query.Where(u => u.Deleted == deleted);
 
             if (!string.IsNullOrWhiteSpace(findCommand.Firstname))
             {

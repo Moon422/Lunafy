@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Lunafy.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -6,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Lunafy.Api;
 
@@ -54,6 +56,21 @@ public class Startup
                 Version = "v1"
             });
         });
+
+        services.AddAuthentication().AddJwtBearer(
+            options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    ValidateAudience = false,
+                    ValidateIssuer = false,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                        Configuration.GetSection("Secret").Value!
+                    ))
+                };
+            }
+        );
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
