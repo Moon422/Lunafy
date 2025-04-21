@@ -221,7 +221,7 @@ public class SongService : ISongService
         pageSize = int.Clamp(pageSize, 1, int.MaxValue);
 
         if (songId <= 0)
-            return new PagedList<Genre>([], pageIndex, pageSize);
+            return new PagedList<Genre>([], 0, pageIndex, pageSize);
 
         return await _genreSongMappingRepository.Table
             .Where(gsm => gsm.SongId == songId)
@@ -292,7 +292,7 @@ public class SongService : ISongService
         pageSize = int.Clamp(pageSize, 1, int.MaxValue);
 
         if (songId <= 0)
-            return new PagedList<Artist>([], pageIndex, pageSize);
+            return new PagedList<Artist>([], 0, pageIndex, pageSize);
 
         var artistQuery = _artistRepository.Table;
         if (!includeDeleted)

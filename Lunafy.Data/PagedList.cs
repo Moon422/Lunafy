@@ -15,11 +15,11 @@ public class PagedList<T> : List<T>, IPagedList<T>
     public bool HasPrevious => PageIndex > 0;
     public bool HasNext => (PageIndex * PageSize + Count) < TotalItems;
 
-    public PagedList(IList<T> source, int pageIndex, int pageSize)
+    public PagedList(IList<T> source, int totalItems, int pageIndex, int pageSize)
     {
         PageIndex = pageIndex;
         PageSize = Math.Max(pageSize, 1);
-        TotalItems = source.Count;
+        TotalItems = totalItems;
         TotalPages = TotalItems / PageSize;
         if (TotalItems % PageSize > 0)
             TotalPages++;

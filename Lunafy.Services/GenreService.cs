@@ -114,7 +114,7 @@ public class GenreService : IGenreService
         pageSize = int.Clamp(pageSize, 1, int.MaxValue);
 
         if (genreId <= 0)
-            return new PagedList<Album>([], pageIndex, pageSize);
+            return new PagedList<Album>([], 0, pageIndex, pageSize);
 
         var albumQuery = _albumRepository.Table;
         if (!includeDeleted)
@@ -132,7 +132,7 @@ public class GenreService : IGenreService
         pageSize = int.Clamp(pageSize, 1, int.MaxValue);
 
         if (genreId <= 0)
-            return new PagedList<Song>([], pageIndex, pageSize);
+            return new PagedList<Song>([], 0, pageIndex, pageSize);
 
         var songQuery = _songRepository.Table;
         if (!includeDeleted)

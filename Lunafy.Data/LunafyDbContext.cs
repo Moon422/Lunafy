@@ -18,6 +18,9 @@ public class LunafyDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<RoleUserMapping> RoleUserMappings { get; set; }
+    public DbSet<AlbumEditAccess> AlbumEditAccesses { get; set; }
+    public DbSet<ArtistEditAccess> ArtistEditAccesses { get; set; }
+    public DbSet<SongEditAccess> SongEditAccesses { get; set; }
 
     public LunafyDbContext(DbContextOptions options)
         : base(options)
@@ -111,5 +114,50 @@ public class LunafyDbContext : DbContext
                     .IsRequired();
             }
         );
+
+        modelBuilder.Entity<AlbumEditAccess>(entity =>
+        {
+            entity.HasOne<Album>()
+                .WithMany()
+                .HasForeignKey(e => e.AlbumId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<ArtistEditAccess>(entity =>
+        {
+            entity.HasOne<Artist>()
+                .WithMany()
+                .HasForeignKey(e => e.ArtistId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<SongEditAccess>(entity =>
+        {
+            entity.HasOne<Song>()
+                .WithMany()
+                .HasForeignKey(e => e.SongId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
     }
 }

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Core.Infrastructure.Dependencies;
+using Lunafy.Data;
 using Lunafy.Data.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
@@ -90,6 +91,33 @@ public class CacheManager : ICacheManager
             _prefixes[key.Prefix] = cts;
             return result;
         }) ?? [];
+    }
+
+    public async Task<IPagedList<T>> GetAsync<T>(CacheKey key, Func<Task<IPagedList<T>>> fetch)
+    {
+        return await _memoryCache.GetOrCreateAsync(key.Key, async entry =>
+        {
+            IPagedList<T> result = await fetch();
+
+            entry.SlidingExpiration = SlidingExpiration;
+            entry.AbsoluteExpirationRelativeToNow = AbsoluteExpiration;
+
+            if (string.IsNullOrWhiteSpace(key.Prefix))
+            {
+                return result;
+            }
+
+            if (_prefixes.TryGetValue(key.Prefix, out var cts) && cts is not null)
+            {
+                entry.AddExpirationToken(new CancellationChangeToken(cts.Token));
+                return result;
+            }
+
+            cts = new CancellationTokenSource();
+            entry.AddExpirationToken(new CancellationChangeToken(cts.Token));
+            _prefixes[key.Prefix] = cts;
+            return result;
+        }) ?? new PagedList<T>([], 0, 0, 1);
     }
 
     public async Task ClearCacheAsync()

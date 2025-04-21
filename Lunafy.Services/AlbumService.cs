@@ -163,7 +163,7 @@ public class AlbumService : IAlbumService
         pageSize = int.Clamp(pageSize, 1, int.MaxValue);
 
         if (albumId <= 0)
-            return new PagedList<Artist>([], pageIndex, pageSize);
+            return new PagedList<Artist>([], 0, pageIndex, pageSize);
 
         var songQuery = _songRepository.Table
             .Where(s => s.AlbumId == albumId);
@@ -247,7 +247,7 @@ public class AlbumService : IAlbumService
         pageSize = pageSize > 0 ? pageSize : 1;
 
         if (albumId <= 0)
-            return new PagedList<Genre>([], pageIndex, pageSize);
+            return new PagedList<Genre>([], 0, pageIndex, pageSize);
 
         return await _genreAlbumMappingRepository.Table
             .Where(gam => gam.AlbumId == albumId)

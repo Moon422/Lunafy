@@ -131,19 +131,17 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
                 query = query.OrderBy(e => e.Id);
             }
 
-            return await query.Skip(pageIndex * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+            return await query.ToPagedListAsync(pageIndex, pageSize);
         };
 
         if (getCacheKey is null)
-            return new PagedList<T>(await getAllAsync(), pageIndex, pageSize);
+            return await getAllAsync();
 
         var cacheKey = getCacheKey(_cacheManager) ??
             _cacheManager.PrepareCacheKey(EntityCacheDefaults<T>.AllCacheKey);
 
         var data = await _cacheManager.GetAsync<T>(cacheKey, async () => await getAllAsync());
-        return new PagedList<T>(data, pageIndex, pageSize);
+        return data;
     }
 
     public async Task<IPagedList<T>> GetAllAsync(int pageIndex, int pageSize, Func<IQueryable<T>, IQueryable<T>> func, Func<ICacheManager, CacheKey?>? getCacheKey = null, bool includeDeleted = false, bool sortByIdDesc = false)
@@ -168,19 +166,17 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
                 query = query.OrderBy(e => e.Id);
             }
 
-            return await query.Skip(pageIndex * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+            return await query.ToPagedListAsync(pageIndex, pageSize);
         };
 
         if (getCacheKey is null)
-            return new PagedList<T>(await getAllAsync(), pageIndex, pageSize);
+            return await getAllAsync();
 
         var cacheKey = getCacheKey(_cacheManager) ??
             _cacheManager.PrepareCacheKey(EntityCacheDefaults<T>.AllCacheKey);
 
-        var data = await _cacheManager.GetAsync<T>(cacheKey, async () => await getAllAsync());
-        return new PagedList<T>(data, pageIndex, pageSize);
+        var data = await _cacheManager.GetAsync(cacheKey, async () => await getAllAsync());
+        return data;
     }
 
     public async Task<IPagedList<T>> GetAllPagedAsync(int pageIndex = 0, int pageSize = int.MaxValue, Func<IQueryable<T>, IQueryable<T>>? func = null, bool includeDeleted = false, bool sortByIdDesc = false)

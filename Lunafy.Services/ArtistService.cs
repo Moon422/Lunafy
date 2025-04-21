@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Data;
+using Lunafy.Data.Caching;
+using Lunafy.Services.Caching;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lunafy.Services;
 
@@ -17,6 +20,8 @@ public class ArtistService : IArtistService
     private readonly IRepository<ArtistSongMapping> _artistSongMappingRepository;
     private readonly IRepository<Song> _songRepository;
     private readonly IRepository<Album> _albumRepository;
+    private readonly IRepository<ArtistEditAccess> _artistEditAccessRepository;
+    private readonly ICacheManager _cacheManager;
 
     #endregion
 
@@ -25,12 +30,16 @@ public class ArtistService : IArtistService
     public ArtistService(IRepository<Artist> artistRepository,
         IRepository<ArtistSongMapping> artistSongMappingRepository,
         IRepository<Song> songRepository,
-        IRepository<Album> albumRepository)
+        IRepository<Album> albumRepository,
+        IRepository<ArtistEditAccess> artistEditAccessRepository,
+        ICacheManager cacheManager)
     {
         _artistRepository = artistRepository ?? throw new ArgumentNullException(nameof(artistRepository));
         _artistSongMappingRepository = artistSongMappingRepository;
         _songRepository = songRepository;
         _albumRepository = albumRepository;
+        _artistEditAccessRepository = artistEditAccessRepository;
+        _cacheManager = cacheManager;
     }
 
     #endregion
@@ -109,6 +118,30 @@ public class ArtistService : IArtistService
         return await queryFunc(_artistRepository.Table).ToPagedListAsync(pageIndex, pageSize);
     }
 
+    public async Task<bool> CanBeEditedByUserAsync(int artistId, int userId)
+    {
+        if (artistId <= 0 || userId <= 0)
+        {
+            return false;
+        }
+
+        var cacheKey = _cacheManager.PrepareCacheKey(ArtistCacheDefaults.UserCanEditCacheKey, artistId, userId);
+        return await _cacheManager.GetAsync(cacheKey, async () => await _artistEditAccessRepository.Table
+            .AnyAsync(x => x.ArtistId == artistId && x.UserId == userId && x.CanEdit));
+    }
+
+    public async Task<bool> CanBeDeletedByUserAsync(int artistId, int userId)
+    {
+        if (artistId <= 0 || userId <= 0)
+        {
+            return false;
+        }
+
+        var cacheKey = _cacheManager.PrepareCacheKey(ArtistCacheDefaults.UserCanDeleteCacheKey, artistId, userId);
+        return await _cacheManager.GetAsync(cacheKey, async () => await _artistEditAccessRepository.Table
+            .AnyAsync(x => x.ArtistId == artistId && x.UserId == userId && x.CanDelete));
+    }
+
     public async Task UpdateArtistAsync(Artist artist)
     {
         ArgumentNullException.ThrowIfNull(artist, nameof(artist));
@@ -129,7 +162,7 @@ public class ArtistService : IArtistService
         pageSize = int.Clamp(pageSize, 1, int.MaxValue);
 
         if (artistId <= 0)
-            return new PagedList<Song>([], pageIndex, pageSize);
+            return new PagedList<Song>([], 0, pageIndex, pageSize);
 
         var songQuery = _songRepository.Table;
         if (!includeDeleted)
@@ -147,7 +180,7 @@ public class ArtistService : IArtistService
         pageSize = int.Clamp(pageSize, 1, int.MaxValue);
 
         if (artistId <= 0)
-            return new PagedList<Album>([], pageIndex, pageSize);
+            return new PagedList<Album>([], 0, pageIndex, pageSize);
 
         var songQuery = _songRepository.Table;
         if (!includeDeleted)

@@ -15,6 +15,8 @@ public class ArtistCacheEventConsumer : CacheEventConsumer<Artist>
         if (entityEventType == EntityEventType.Delete)
         {
             await RemoveByPrefixAsync(SongCacheDefaults.SongArtistIdsPrefix);
+            await RemoveByPrefixAsync(ArtistCacheDefaults.UserCanEditPrefix);
+            await RemoveByPrefixAsync(ArtistCacheDefaults.UserCanDeletePrefix);
         }
 
         await base.ClearCacheAsync(entity, entityEventType);

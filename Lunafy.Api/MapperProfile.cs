@@ -13,7 +13,11 @@ public class MapperProfile : Profile
         CreateMap<RegistrationModel, User>();
         CreateMap<User, UserModel>();
         CreateMap<Artist, ArtistReadModel>();
-        CreateMap<ArtistWriteModel, Artist>();
+        CreateMap<ArtistWriteModel, Artist>()
+            .ForMember(dest => dest.CreatedOn, opt => opt.Ignore())
+            .ForMember(dest => dest.ModifiedOn, opt => opt.Ignore())
+            .ForMember(dest => dest.Deleted, opt => opt.Ignore())
+            .ForMember(dest => dest.DeletedOn, opt => opt.Ignore());
         CreateMap<ArtistSearchCommand, FindArtistsCommand>();
     }
 }

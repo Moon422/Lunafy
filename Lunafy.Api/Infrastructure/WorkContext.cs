@@ -29,15 +29,22 @@ public class WorkContext : IWorkContext
         if (_cachedUser is not null)
             return _cachedUser;
 
-        var email = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Email)
+        var httpContext = _httpContextAccessor.HttpContext
             ?? throw new InvalidOperationException();
+
+        if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+        {
+            return null;
+        }
+
+        var email = httpContext.User.FindFirstValue(ClaimTypes.Email);
 
         if (!string.IsNullOrWhiteSpace(email) && (_cachedUser = await _userService.GetUserByEmailAsync(email)) is not null)
         {
             return _cachedUser;
         }
 
-        var username = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+        var username = httpContext.User.FindFirstValue(ClaimTypes.Name);
 
         if (!string.IsNullOrWhiteSpace(username) && (_cachedUser = await _userService.GetUserByUseranmeAsync(username)) is not null)
         {

@@ -6,6 +6,7 @@ using AutoMapper;
 using Lunafy.Api.Factories;
 using Lunafy.Api.Models.Artist;
 using Lunafy.Core.Domains;
+using Lunafy.Core.Infrastructure;
 using Lunafy.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -21,16 +22,19 @@ public class ArtistApiController : ControllerBase
     private readonly IMapper _mapper;
     private IArtistService _artistService;
     private readonly IArtistModelFactory _artistModelFactory;
+    private readonly IWorkContext _workContext;
 
     public ArtistApiController(IWebHostEnvironment env,
         IMapper mapper,
         IArtistService artistService,
-        IArtistModelFactory artistModelFactory)
+        IArtistModelFactory artistModelFactory,
+        IWorkContext workContext)
     {
         _env = env;
         _mapper = mapper;
         _artistService = artistService;
         _artistModelFactory = artistModelFactory;
+        _workContext = workContext;
     }
 
     [HttpGet]
@@ -75,5 +79,40 @@ public class ArtistApiController : ControllerBase
 
         var response = await _artistModelFactory.PrepareArtistReadModelAsync(_mapper.Map<ArtistReadModel>(artist), artist);
         return CreatedAtAction(nameof(Details), new { id = artist.Id }, response);
+    }
+
+    [HttpPut, Authorize]
+    public async Task<IActionResult> Edit([FromBody] ArtistWriteModel model)
+    {
+        var user = await _workContext.GetCurrentUserAsync();
+        if (user is null || !user.IsAdmin || await _artistService.CanBeEditedByUserAsync(model.Id, user.Id))
+        {
+            return Forbid();
+        }
+
+        var artist = _mapper.Map<Artist>(model);
+        await _artistService.UpdateArtistAsync(artist);
+
+        var response = _mapper.Map<ArtistReadModel>(artist);
+        return Ok(response);
+    }
+
+    [HttpDelete("{artistId}"), Authorize]
+    public async Task<IActionResult> Delete(int artistId)
+    {
+        var user = await _workContext.GetCurrentUserAsync();
+        if (user is null || !user.IsAdmin || await _artistService.CanBeEditedByUserAsync(artistId, user.Id))
+        {
+            return Forbid();
+        }
+
+        var artist = await _artistService.GetArtistByIdAsync(artistId);
+        if (artist is null)
+        {
+            return NotFound($"Artist with id {artistId} not found.");
+        }
+
+        await _artistService.DeleteArtistAsync(artist);
+        return NoContent();
     }
 }
