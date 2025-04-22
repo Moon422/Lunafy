@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
 using Lunafy.Api.Factories;
@@ -70,7 +71,7 @@ public class ArtistApiController : ControllerBase
 
         var wwwRootImages = Path.Join(_env.WebRootPath, "images");
         var files = Directory.GetFiles(wwwRootImages, "no_image_*.webp");
-        var directory = Directory.CreateDirectory(Path.Join(wwwRootImages, "artists", artist.Id.ToString()));
+        var directory = Directory.CreateDirectory(Path.Join(wwwRootImages, "artists", "profile", artist.Id.ToString()));
 
         foreach (var file in files)
         {
@@ -101,7 +102,7 @@ public class ArtistApiController : ControllerBase
     public async Task<IActionResult> Delete(int artistId)
     {
         var user = await _workContext.GetCurrentUserAsync();
-        if (user is null || !user.IsAdmin || await _artistService.CanBeEditedByUserAsync(artistId, user.Id))
+        if (user is null || !user.IsAdmin || !await _artistService.CanBeEditedByUserAsync(artistId, user.Id))
         {
             return Forbid();
         }
@@ -114,5 +115,48 @@ public class ArtistApiController : ControllerBase
 
         await _artistService.DeleteArtistAsync(artist);
         return NoContent();
+    }
+
+    [HttpPost("[upload-image]"), Authorize]
+    public async Task<IActionResult> UploadImage([FromBody] UploadImageModel model)
+    {
+        var artistId = model.ArtistId;
+        var images = model.Images;
+        if (artistId <= 0)
+        {
+            return BadRequest($"Artist is required.");
+        }
+
+        if (!images.Any())
+        {
+            return BadRequest("Images are required.");
+        }
+
+        var user = await _workContext.GetCurrentUserAsync();
+        if (user is null || !user.IsAdmin || !await _artistService.CanBeEditedByUserAsync(artistId, user.Id))
+        {
+            return Forbid();
+        }
+
+        var artist = await _artistService.GetArtistByIdAsync(artistId);
+        if (artist is null)
+        {
+            return NotFound($"Artist with id {artistId} not found.");
+        }
+
+        var uploadImagesRoot = Path.Join(_env.WebRootPath, "images", "artists", "uploads", artist.Id.ToString());
+        if (!Directory.Exists(uploadImagesRoot))
+        {
+            Directory.CreateDirectory(uploadImagesRoot);
+        }
+
+        foreach (var image in images)
+        {
+            var filePath = Path.Join(uploadImagesRoot, $"{Guid.NewGuid():N}.webp");
+            using var fileStream = System.IO.File.OpenWrite(filePath);
+            await image.CopyToAsync(fileStream);
+        }
+
+        return Ok("Images uploaded.");
     }
 }

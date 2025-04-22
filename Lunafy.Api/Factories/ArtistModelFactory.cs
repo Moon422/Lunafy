@@ -34,7 +34,7 @@ public class ArtistModelFactory : IArtistModelFactory
         var httpContext = _httpContextAccessor.HttpContext
             ?? throw new InvalidOperationException("HttpContext is null.");
 
-        var url = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/images/artists/{artist.Id}/{width}.webp";
+        var url = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/images/artists/profile/{artist.Id}/{width}.webp";
         return url;
     }
 
