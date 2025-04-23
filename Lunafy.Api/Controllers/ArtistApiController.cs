@@ -125,7 +125,7 @@ public class ArtistApiController : ControllerBase
         var images = model.Images;
         if (artistId <= 0)
         {
-            return BadRequest($"Artist is required.");
+            return BadRequest("Artist is required.");
         }
 
         if (!images.Any())

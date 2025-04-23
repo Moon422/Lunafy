@@ -5,6 +5,7 @@ core=$(prefix).Core
 data=$(prefix).Data
 services=$(prefix).Services
 api=$(prefix).Api
+client=$(prefix).Client
 
 run:
 	$(cc) run --project $(api)
@@ -18,3 +19,10 @@ db:
 	git add $(data)/Migrations 
 	git commit -m '$(msg)' 
 	echo "migration complete and committed to git"
+
+client:
+	cd $(client) && npm install && npm run dev
+
+full:
+	@echo "Starting both API and client..."
+	@$(MAKE) -j2 watch client
