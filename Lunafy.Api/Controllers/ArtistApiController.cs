@@ -12,6 +12,7 @@ using Lunafy.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using SkiaSharp;
 
 namespace Lunafy.Api.Controllers;
 
@@ -117,7 +118,7 @@ public class ArtistApiController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("[upload-image]"), Authorize]
+    [HttpPost("upload-image"), Authorize]
     public async Task<IActionResult> UploadImage([FromBody] UploadImageModel model)
     {
         var artistId = model.ArtistId;
@@ -152,9 +153,13 @@ public class ArtistApiController : ControllerBase
 
         foreach (var image in images)
         {
+            using var bitmap = SKBitmap.Decode(image.OpenReadStream());
+            var skImage = SKImage.FromBitmap(bitmap);
+
             var filePath = Path.Join(uploadImagesRoot, $"{Guid.NewGuid():N}.webp");
-            using var fileStream = System.IO.File.OpenWrite(filePath);
-            await image.CopyToAsync(fileStream);
+            using var outputFileStream = System.IO.File.OpenWrite(filePath);
+
+            skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
         }
 
         return Ok("Images uploaded.");
