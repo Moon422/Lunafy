@@ -14,6 +14,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@iconify-json/tabler": "^1.2.17",
     "@tailwindcss/vite": "^4.1.4",
     "pinia": "^3.0.1",
     "tailwindcss": "^4.1.4",
@@ -21,6 +22,8 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@iconify/json": "^2.2.330",
+    "@iconify/tailwind4": "^1.0.6",
     "@tsconfig/node22": "^22.0.1",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.14.0",
