@@ -1,1 +1,46 @@
 @import "tailwindcss";
+
+/* Inter normal */
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Inter italic */
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* NotoSans normal */
+@font-face {
+    font-family: 'NotoSans';
+    src: url('/fonts/NotoSans/NotoSans-VariableFont_wdth,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* NotoSans italic */
+@font-face {
+    font-family: 'NotoSans';
+    src: url('/fonts/NotoSans/NotoSans-Italic-VariableFont_wdth,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+@theme {
+    --font-inter: 'Inter', 'Noto Sans', 'sans-serif';
+    --font-noto: 'Noto Sans', 'sans-serif';
+    --color-baby-blue: #68bbe3;
+    --color-blue-grotto: #0e86d4;
+    --color-blue: #055c9d;
+    --color-navy-blue: #003060;
+}
