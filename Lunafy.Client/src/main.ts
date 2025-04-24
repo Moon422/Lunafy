@@ -6,9 +6,6 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
-// FlyonUI
-import "flyonui/flyonui"
-
 const app = createApp(App)
 
 app.use(createPinia())
