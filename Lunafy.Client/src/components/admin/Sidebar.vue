@@ -4,29 +4,75 @@ import SidebarItem from './SidebarItem.vue'
 </script>
 
 <template>
-    <div class="w-full h-full flex flex-col bg-blue text-white">
-        <h1 class=" h-20 flex gap-2 justify-center items-center text-2xl font-semibold border-b border-blue-grotto">
-            <MusicalNoteIcon class="size-8" /> Lunafy
+    <div class="sidebar bg-primary text-light">
+        <h1 class="sidebar-logo border-bottom">
+            <MusicalNoteIcon class="icon" /> Lunafy
         </h1>
-        <div class="flex-1 overflow-y-scroll p-4">
+        <div class="sidebar-main-area p-3">
             <SidebarItem label="Dashboard" :icon="HomeIcon" />
             <SidebarItem label="Users" :icon="UsersIcon" />
-            <div class="pt-3 mt-3 border-t border-blue-grotto">
-                <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Content</h3>
+            <div class="divider border-top">
+                <h3>Content</h3>
             </div>
             <SidebarItem label="Tracks" :icon="MusicalNoteIcon" />
             <SidebarItem label="Albums" :icon="ArchiveBoxIcon" />
             <SidebarItem label="Artists" :icon="StarIcon" />
             <SidebarItem label="Playlists" :icon="Bars4Icon" />
-            <div class="pt-3 mt-3 border-t border-blue-grotto">
-                <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Reports</h3>
+            <div class="divider border-top">
+                <h3>Reports</h3>
             </div>
             <SidebarItem label="Analytics" :icon="ChartBarSquareIcon" />
         </div>
-        <div class="p-4 border-t border-blue-grotto">
+        <div class="sidebar-footer p-3 border-top">
             <SidebarItem label="Settings" :icon="Cog6ToothIcon" />
         </div>
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.sidebar {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-color: var(--admin-medium-gray);
+}
+
+.sidebar-logo {
+    height: 5rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.sidebar-logo.icon {
+    width: 2rem;
+    height: 2rem;
+}
+
+.sidebar-main-area {
+    flex: 1;
+    overflow-y: scroll;
+}
+
+.sidebar.divider {
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+    border-color: var(--admin-medium-gray);
+}
+
+.sidebar.divider h3 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    /* font-size: 0.75rem;
+    line-height: calc(1 / 0.75); */
+    color: #99a1af;
+    text-transform: uppercase;
+
+}
+
+.sidebar-footer {
+    border-color: var(--admin-medium-gray);
+}
+</style>

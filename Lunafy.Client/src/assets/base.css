@@ -36,11 +36,183 @@
     font-display: swap;
 }
 
-@theme {
+/* @theme {
     --font-inter: 'Inter', 'Noto Sans', 'sans-serif';
     --font-noto: 'Noto Sans', 'sans-serif';
     --color-baby-blue: #68bbe3;
     --color-blue-grotto: #0e86d4;
     --color-blue: #055c9d;
     --color-navy-blue: #003060;
+} */
+
+:root {
+    --admin-primary: #3B82F6;
+    /* Primary blue for buttons, active states */
+    --admin-dark-blue: #1E3A8A;
+    /* Dark blue for hover states */
+    --admin-white: #FFFFFF;
+    /* Background for content areas */
+    --admin-light-gray: #F3F4F6;
+    /* Background for sidebars, alternate rows */
+    --admin-medium-gray: #D1D5DB;
+    /* Borders, dividers */
+    --admin-dark-gray: #4B5563;
+    /* Text, icons */
+    --admin-success: #10B981;
+    /* Success messages, buttons */
+    --admin-warning: #F59E0B;
+    /* Warning messages, buttons */
+    --admin-error: #EF4444;
+    /* Error messages, delete buttons */
+    --admin-info: #06B6D4;
+    /* Info badges, tooltips */
+    --admin-sidebar-bg: #1F2937;
+    /* Sidebar background */
+    --admin-card-bg: #F9FAFB;
+    /* Card/modal background */
+    --admin-table-hover: #E5E7EB;
+    /* Table row hover */
+    --admin-placeholder: #9CA3AF;
+    /* Placeholder text */
+}
+
+/* Buttons */
+.admin-btn-primary {
+    background-color: var(--admin-primary);
+    border-color: var(--admin-primary);
+    color: var(--admin-white);
+}
+
+.admin-btn-primary:hover {
+    background-color: #2563EB;
+    /* Darkened primary by ~10% */
+    border-color: #2563EB;
+}
+
+.admin-btn-success {
+    background-color: var(--admin-success);
+    border-color: var(--admin-success);
+    color: var(--admin-white);
+}
+
+.admin-btn-success:hover {
+    background-color: #0D905D;
+    /* Darkened success by ~10% */
+    border-color: #0D905D;
+}
+
+.admin-btn-warning {
+    background-color: var(--admin-warning);
+    border-color: var(--admin-warning);
+    color: var(--admin-white);
+}
+
+.admin-btn-warning:hover {
+    background-color: #D97706;
+    /* Darkened warning by ~10% */
+    border-color: #D97706;
+}
+
+.admin-btn-error {
+    background-color: var(--admin-error);
+    border-color: var(--admin-error);
+    color: var(--admin-white);
+}
+
+.admin-btn-error:hover {
+    background-color: #DC2626;
+    /* Darkened error by ~10% */
+    border-color: #DC2626;
+}
+
+/* Sidebar */
+.admin-sidebar {
+    background-color: var(--admin-sidebar-bg);
+    color: var(--admin-medium-gray);
+}
+
+.admin-sidebar .nav-link {
+    color: var(--admin-medium-gray);
+}
+
+.admin-sidebar .nav-link.active {
+    background-color: var(--admin-primary);
+    color: var(--admin-white);
+}
+
+.admin-sidebar .nav-link:hover {
+    background-color: var(--admin-dark-blue);
+    color: var(--admin-white);
+}
+
+/* Tables */
+.admin-table {
+    background-color: var(--admin-white);
+}
+
+.admin-table thead th {
+    background-color: var(--admin-light-gray);
+    color: var(--admin-dark-blue);
+}
+
+.admin-table tbody tr {
+    background-color: var(--admin-white);
+}
+
+.admin-table tbody tr:nth-child(even) {
+    background-color: var(--admin-light-gray);
+}
+
+.admin-table tbody tr:hover {
+    background-color: var(--admin-table-hover);
+}
+
+.admin-table td,
+.admin-table th {
+    border-color: var(--admin-medium-gray);
+}
+
+/* Pagination */
+.admin-pagination .page-item.active .page-link {
+    background-color: var(--admin-primary);
+    border-color: var(--admin-primary);
+    color: var(--admin-white);
+}
+
+.admin-pagination .page-item .page-link {
+    color: var(--admin-dark-gray);
+    background-color: var(--admin-white);
+    border-color: var(--admin-medium-gray);
+}
+
+.admin-pagination .page-item .page-link:hover {
+    background-color: var(--admin-table-hover);
+    color: var(--admin-dark-blue);
+}
+
+/* Cards */
+.admin-card {
+    background-color: var(--admin-card-bg);
+    border-color: var(--admin-medium-gray);
+}
+
+/* Inputs */
+.admin-form-control {
+    background-color: var(--admin-white);
+    border-color: var(--admin-medium-gray);
+    color: var(--admin-dark-gray);
+}
+
+.admin-form-control:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+
+.admin-form-control::placeholder {
+    color: var(--admin-placeholder);
+}
+
+/* Dividers */
+.admin-divider {
+    border-color: var(--admin-medium-gray);
 }
