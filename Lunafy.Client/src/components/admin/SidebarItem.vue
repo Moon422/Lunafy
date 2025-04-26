@@ -4,10 +4,12 @@ const { label, icon } = defineProps<{ label: string, icon: Component }>()
 </script>
 
 <template>
-    <a href="#">
-        <icon />
-        {{ label }}
-    </a>
+    <div>
+        <RouterLink to="#">
+            <icon />
+            {{ label }}
+        </RouterLink>
+    </div>
 </template>
 
 <style scoped></style>

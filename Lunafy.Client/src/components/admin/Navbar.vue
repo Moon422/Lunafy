@@ -2,8 +2,12 @@
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-lg bg-dark border-bottom border-body sticky-top">
+    <nav class="navbar navbar-expand-lg bg-dark sticky-top">
         <div class="container-fluid">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
+                <i class="bi bi-list"></i>
+            </button>
             <a class="navbar-brand" href="#">Navbar</a>
             <div>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas"

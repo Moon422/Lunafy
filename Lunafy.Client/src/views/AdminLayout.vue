@@ -13,8 +13,8 @@ const showSidebar = ref(true)
 <template>
     <div data-bs-theme="dark">
         <Navbar />
-        <div class="mt-3 my-md-4 d-block d-lg-flex gx-0 gx-lg-5">
-
+        <div class="d-block d-lg-flex gx-0 gx-lg-5">
+            <Sidebar />
         </div>
     </div>
 </template>
