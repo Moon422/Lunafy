@@ -5,7 +5,7 @@ import SidebarItemGroup from './SidebarItemGroup.vue'
 
 <template>
     <aside class="sidebar bg-body text-white-50">
-        <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="offcanvasSidebar"
+        <div class="offcanvas-lg offcanvas-start h-100" tabindex="-1" id="offcanvasSidebar"
             aria-labelledby="offcanvasSidebarLabel">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Lunafy Admin</h5>
@@ -13,9 +13,9 @@ import SidebarItemGroup from './SidebarItemGroup.vue'
                     data-bs-target="#offcanvasSidebar"></button>
             </div>
             <div class="offcanvas-body h-100">
-                <nav class="w-100 d-flex flex-column">
+                <nav class="w-100 h-100 d-flex flex-column">
                     <div class="flex-grow-1 overflow-y-auto d-flex flex-column">
-                        <SidebarItem label="Dashboard" icon="bi-house-door" href="/admin" />
+                        <SidebarItem label="Dashboard" icon="bi-house-door" href="/admin/home" />
                         <SidebarItem label="Users" icon="bi-people" href="/admin/users" />
                         <SidebarItemGroup title="Content">
                             <SidebarItem label="Tracks" icon="bi-music-note" href="/admin/tracks" />

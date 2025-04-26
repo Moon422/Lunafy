@@ -20,14 +20,44 @@ const router = createRouter({
       component: () => import('@/layouts/AdminLayout.vue'),
       children: [
         {
-          path: '/admin',
+          path: '/admin/home',
           name: 'admin-home',
           component: () => import('@/views/admin/home.vue')
         },
         {
           path: '/admin/users',
-          name: 'admin-user',
+          name: 'admin-users',
           component: () => import('@/views/admin/users.vue')
+        },
+        {
+          path: '/admin/tracks',
+          name: 'admin-tracks',
+          component: () => import('@/views/admin/tracks.vue')
+        },
+        {
+          path: '/admin/albums',
+          name: 'admin-albums',
+          component: () => import('@/views/admin/albums.vue')
+        },
+        {
+          path: '/admin/artists',
+          name: 'admin-artists',
+          component: () => import('@/views/admin/artists.vue')
+        },
+        {
+          path: '/admin/playlists',
+          name: 'admin-playlists',
+          component: () => import('@/views/admin/playlists.vue')
+        },
+        {
+          path: '/admin/analytics',
+          name: 'admin-analytics',
+          component: () => import('@/views/admin/analytics.vue')
+        },
+        {
+          path: '/admin/settings',
+          name: 'admin-settings',
+          component: () => import('@/views/admin/settings.vue')
         }
       ]
     }

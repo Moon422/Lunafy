@@ -15,9 +15,16 @@ const showSidebar = ref(true)
         <Navbar />
         <div class="d-block d-lg-flex gx-0 gx-lg-5">
             <Sidebar />
-            <RouterView />
+            <main class="flex-grow-1 p-4">
+                <RouterView />
+            </main>
         </div>
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+main {
+    background: rgb(99, 99, 99);
+    min-height: calc(100vh - 3.5rem);
+}
+</style>
