@@ -20,13 +20,9 @@ const router = createRouter({
     {
       path: '/admin',
       name: 'admin',
-      component: () => import('../views/AdminView.vue'),
+      component: () => import('../views/AdminLayout.vue'),
     }
   ],
-})
-
-router.afterEach(async (to, from, failure) => {
-  if (!failure) setTimeout(() => window.HSStaticMethods.autoInit(), 100)
 })
 
 export default router
