@@ -15,6 +15,7 @@ const showSidebar = ref(true)
         <Navbar />
         <div class="d-block d-lg-flex gx-0 gx-lg-5">
             <Sidebar />
+            <RouterView />
         </div>
     </div>
 </template>

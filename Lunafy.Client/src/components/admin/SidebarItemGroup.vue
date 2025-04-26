@@ -5,8 +5,7 @@ const { title, icon } = defineProps<{ title: string, icon?: Component }>()
 </script>
 
 <template>
-    <hr>
-    <strong class="d-flex w-100 align-items-center fw-semibold">
+    <strong class="d-flex w-100 align-items-center fw-semibold my-2">
         <icon />
         {{ title }}
     </strong>

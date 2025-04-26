@@ -4,7 +4,7 @@ import SidebarItemGroup from './SidebarItemGroup.vue'
 </script>
 
 <template>
-    <aside class="sidebar bg-primary">
+    <aside class="sidebar bg-body text-white-50">
         <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="offcanvasSidebar"
             aria-labelledby="offcanvasSidebarLabel">
             <div class="offcanvas-header">
@@ -12,23 +12,23 @@ import SidebarItemGroup from './SidebarItemGroup.vue'
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"
                     data-bs-target="#offcanvasSidebar"></button>
             </div>
-            <div class="offcanvas-body">
-                <nav class="w-100 w-lg-">
-                    <div class="mb-0 pb-3 pb-md-2 pe-lg-2 d-flex flex-column">
-                        <SidebarItem label="Dashboard" :icon="HomeIcon" />
-                        <SidebarItem label="Users" :icon="UsersIcon" />
+            <div class="offcanvas-body h-100">
+                <nav class="w-100 d-flex flex-column">
+                    <div class="flex-grow-1 overflow-y-auto d-flex flex-column">
+                        <SidebarItem label="Dashboard" icon="bi-house-door" href="/admin" />
+                        <SidebarItem label="Users" icon="bi-people" href="/admin/users" />
                         <SidebarItemGroup title="Content">
-                            <SidebarItem label="Tracks" :icon="MusicalNoteIcon" />
-                            <SidebarItem label="Albums" :icon="ArchiveBoxIcon" />
-                            <SidebarItem label="Artists" :icon="StarIcon" />
-                            <SidebarItem label="Playlists" :icon="Bars4Icon" />
+                            <SidebarItem label="Tracks" icon="bi-music-note" href="/admin/tracks" />
+                            <SidebarItem label="Albums" icon="bi-cassette" href="/admin/Albums" />
+                            <SidebarItem label="Artists" icon="bi-star" href="/admin/artists" />
+                            <SidebarItem label="Playlists" icon="bi-music-note-list" href="/admin/playlists" />
                         </SidebarItemGroup>
                         <SidebarItemGroup title="Reports">
-                            <SidebarItem label="Analytics" :icon="ChartBarSquareIcon" />
+                            <SidebarItem label="Analytics" icon="bi-bar-chart" href="/admin/analytics" />
                         </SidebarItemGroup>
                     </div>
-                    <div class="sidebar-footer p-3 border-top">
-                        <SidebarItem label="Settings" :icon="Cog6ToothIcon" />
+                    <div>
+                        <SidebarItem label="Settings" icon="bi-gear" href="/admin/settings" />
                     </div>
                 </nav>
             </div>
@@ -37,6 +37,12 @@ import SidebarItemGroup from './SidebarItemGroup.vue'
 </template>
 
 <style scoped>
+.sidebar-active,
+.sidebar nav a:hover {
+    background: rgb(99, 99, 99) !important;
+    color: black;
+}
+
 @media (min-width: 992px) {
     .sidebar {
         position: -webkit-sticky;
@@ -44,7 +50,7 @@ import SidebarItemGroup from './SidebarItemGroup.vue'
         top: 5rem;
         display: block !important;
         height: calc(100vh - 3.5rem);
-        /* height: 100vh; */
+        width: 15rem;
         padding-left: .25rem;
         margin-left: -.25rem;
         overflow-y: auto;

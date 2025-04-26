@@ -8,7 +8,7 @@
                 data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
                 <i class="bi bi-list"></i>
             </button>
-            <a class="navbar-brand" href="#">Navbar</a>
+            <a class="navbar-brand" href="#">Lunafy Dashboard</a>
             <div>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas"
                     data-bs-target="#offcanvasNotification" aria-controls="offcanvasNotification">
