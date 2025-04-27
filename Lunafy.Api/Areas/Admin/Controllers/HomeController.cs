@@ -13,20 +13,17 @@ namespace Lunafy.Api.Areas.Admin.Controllers;
 [Route("api/[area]/home")]
 public class HomeApiController : ControllerBase
 {
-    private readonly IUserService _userService;
     private readonly IWorkContext _workContext;
     private readonly IHomeModelsFactory _homeModelsFactory;
 
-    public HomeApiController(IUserService userService,
-        IWorkContext workContext,
+    public HomeApiController(IWorkContext workContext,
         IHomeModelsFactory homeModelsFactory)
     {
-        _userService = userService;
         _workContext = workContext;
         _homeModelsFactory = homeModelsFactory;
     }
 
-    [HttpGet("[action]")]
+    [HttpGet("get-total-users")]
     public async Task<IActionResult> GetTotalUsers()
     {
         var user = await _workContext.GetCurrentUserAsync();

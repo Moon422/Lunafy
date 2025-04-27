@@ -1,5 +1,39 @@
 <script setup lang="ts">
-import { TotalUsersStatApiResponse } from '@/types/admin'
+import axios, { type AxiosRequestConfig } from 'axios'
+import type { TotalUsersStatApiResponse } from '@/types/admin'
+import { useAuthStore } from '@/stores/auth'
+import { onMounted } from 'vue'
+
+const apiUrl = import.meta.env.VITE_API_URL
+const authStore = useAuthStore()
+
+onMounted(async () => {
+    const token = authStore.token
+    const config: AxiosRequestConfig = {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        timeout: 10000
+    }
+
+    try {
+        const response = await axios.get<TotalUsersStatApiResponse>(`${apiUrl}/api/admin/home/get-total-users`, config)
+        if (response.status === axios.HttpStatusCode.Ok) {
+
+        } else if (response.status === axios.HttpStatusCode.Forbidden) {
+
+        } else {
+
+        }
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error('Axios error:', error.response?.status)
+        } else {
+            console.error('Unexpected error:', error)
+        }
+    }
+})
 
 
 </script>
