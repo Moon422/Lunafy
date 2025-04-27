@@ -1,3 +1,5 @@
+using System;
+
 namespace Lunafy.Services;
 
 public record FindUsersCommand : FindEntitiesCommand
@@ -7,4 +9,6 @@ public record FindUsersCommand : FindEntitiesCommand
     public string? Username { get; set; }
     public string? Email { get; set; }
     public string? Keyword { get; set; }
+    public DateTime? CreatedOnFromUtc { get; set; }
+    public DateTime? CreatedOnTillUtc { get; set; }
 }

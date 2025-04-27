@@ -84,6 +84,8 @@ public class UserApiController : ControllerBase
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
         await GenerateRefreshToken(user);
+        user.LastLogin = DateTime.UtcNow;
+        await _userService.UpdateUserAsync(user);
 
         return jwt;
     }

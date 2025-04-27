@@ -14,6 +14,7 @@ public interface IUserService
     Task<IList<User>> GetAllUsersAsync(bool includeDeleted = false, bool sortByIdDesc = false);
     Task<IPagedList<User>> GetAllUsersAsync(int pageIndex, int pageSize, bool includeDeleted = false, bool sortByIdDesc = false);
     Task<IPagedList<User>> FindUsersAsync(FindUsersCommand findCommand, bool? deleted = false);
+    Task<int> CountUsersAsync(FindUsersCommand findCommand, bool? deleted = false);
     Task UpdateUserAsync(User user);
     Task DeleteUserAsync(User user);
     Task<User?> GetUserByEmailAsync(string email);

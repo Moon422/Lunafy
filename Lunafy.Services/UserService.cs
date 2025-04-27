@@ -152,10 +152,78 @@ public class UserService : IUserService
                     u.Email.ToLower().Contains(keyword));
             }
 
+            if (findCommand.CreatedOnFromUtc.HasValue)
+            {
+                query = query.Where(u => u.CreatedOn >= findCommand.CreatedOnFromUtc);
+            }
+
+            if (findCommand.CreatedOnTillUtc.HasValue)
+            {
+                query = query.Where(u => u.CreatedOn <= findCommand.CreatedOnTillUtc);
+            }
+
             return query;
         };
 
         return await queryFunc(_userRepository.Table).ToPagedListAsync(pageIndex, pageSize);
+    }
+
+    public async Task<int> CountUsersAsync(FindUsersCommand findCommand, bool? deleted = false)
+    {
+        ArgumentNullException.ThrowIfNull(findCommand, nameof(findCommand));
+
+        int pageIndex = findCommand.PageIndex >= 0 ? findCommand.PageIndex : 0;
+        int pageSize = findCommand.PageSize > 0 ? findCommand.PageSize : 1;
+
+        Func<IQueryable<User>, IQueryable<User>> queryFunc = query =>
+        {
+            if (deleted.HasValue)
+                query = query.Where(u => u.Deleted == deleted);
+
+            if (!string.IsNullOrWhiteSpace(findCommand.Firstname))
+            {
+                query = query.Where(u => u.Firstname.ToLower().Contains(findCommand.Firstname.ToLower()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(findCommand.Lastname))
+            {
+                query = query.Where(u => u.Lastname.ToLower().Contains(findCommand.Lastname.ToLower()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(findCommand.Username))
+            {
+                query = query.Where(u => u.Username.ToLower().Contains(findCommand.Username.ToLower()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(findCommand.Email))
+            {
+                query = query.Where(u => u.Email.ToLower().Contains(findCommand.Email.ToLower()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(findCommand.Keyword))
+            {
+                string keyword = findCommand.Keyword.ToLower();
+                query = query.Where(u =>
+                    u.Firstname.ToLower().Contains(keyword) ||
+                    u.Lastname.ToLower().Contains(keyword) ||
+                    u.Username.ToLower().Contains(keyword) ||
+                    u.Email.ToLower().Contains(keyword));
+            }
+
+            if (findCommand.CreatedOnFromUtc.HasValue)
+            {
+                query = query.Where(u => u.CreatedOn >= findCommand.CreatedOnFromUtc);
+            }
+
+            if (findCommand.CreatedOnTillUtc.HasValue)
+            {
+                query = query.Where(u => u.CreatedOn <= findCommand.CreatedOnTillUtc);
+            }
+
+            return query;
+        };
+
+        return await queryFunc(_userRepository.Table).CountAsync();
     }
 
     public async Task UpdateUserAsync(User user)

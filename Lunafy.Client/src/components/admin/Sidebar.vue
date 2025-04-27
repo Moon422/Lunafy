@@ -45,14 +45,10 @@ import SidebarItemGroup from './SidebarItemGroup.vue'
 
 @media (min-width: 992px) {
     .sidebar {
-        position: -webkit-sticky;
-        position: sticky;
-        top: 5rem;
+        position: fixed;
         display: block !important;
         height: calc(100vh - 3.5rem);
         width: 15rem;
-        padding-left: .25rem;
-        margin-left: -.25rem;
         overflow-y: auto;
     }
 }

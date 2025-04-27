@@ -13,9 +13,9 @@ const showSidebar = ref(true)
 <template>
     <div data-bs-theme="dark">
         <Navbar />
-        <div class="d-block d-lg-flex gx-0 gx-lg-5">
+        <div class="d-block d-lg-flex gx-0">
             <Sidebar />
-            <main class="flex-grow-1 p-4">
+            <main class="flex-grow-1 p-4" style="">
                 <RouterView />
             </main>
         </div>
@@ -25,11 +25,11 @@ const showSidebar = ref(true)
 <style scoped>
 main {
     background: rgb(99, 99, 99);
-    /* min-height: calc(100vh - 3.5rem); */
     min-height: calc(100vh - 2.875rem);
 
     @media (min-width: 992px) {
         min-height: calc(100vh - 3.5rem);
+        margin-left: 15rem;
     }
 }
 </style>
