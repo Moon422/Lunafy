@@ -25,6 +25,11 @@ const showSidebar = ref(true)
 <style scoped>
 main {
     background: rgb(99, 99, 99);
-    min-height: calc(100vh - 3.5rem);
+    /* min-height: calc(100vh - 3.5rem); */
+    min-height: calc(100vh - 2.875rem);
+
+    @media (min-width: 992px) {
+        min-height: calc(100vh - 3.5rem);
+    }
 }
 </style>
