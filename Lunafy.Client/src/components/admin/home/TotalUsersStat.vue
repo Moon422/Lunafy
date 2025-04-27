@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import axios, { type AxiosRequestConfig } from 'axios'
+import axios from 'axios'
 import type { TotalUsersStatApiResponse } from '@/types/admin'
 import { useAuthStore } from '@/stores/auth'
 import { onMounted } from 'vue'
+import { toast } from 'vue3-toastify'
+import type { HttpResponseModel } from '@/types/common'
+import { useAxios } from '@/composables/axios'
 
-const apiUrl = import.meta.env.VITE_API_URL
 const authStore = useAuthStore()
+const { loading, error, get } = useAxios()
 
 onMounted(async () => {
-    const token = authStore.token
-    const config: AxiosRequestConfig = {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        timeout: 10000
-    }
-
+    console.log('component mounted')
     try {
-        const response = await axios.get<TotalUsersStatApiResponse>(`${apiUrl}/api/admin/home/get-total-users`, config)
-        if (response.status === axios.HttpStatusCode.Ok) {
+        console.log("makking call")
+        const { data: { data, errors }, status } = await get<HttpResponseModel<TotalUsersStatApiResponse>>('/api/admin/home/get-total-users')
+        console.log('get call completed')
 
-        } else if (response.status === axios.HttpStatusCode.Forbidden) {
+        if (status !== axios.HttpStatusCode.Ok) {
+            const errorMsg = errors.length ? `Failed to fetch data: ${errors}`
+                : 'Failed to fetch data'
 
-        } else {
-
+            toast.error(errorMsg)
+            return
         }
+
+        console.log('data:', data)
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            console.error('Axios error:', error.response?.status)
+            toast.error(`Axios error: ${error.response?.status}`)
         } else {
-            console.error('Unexpected error:', error)
+            toast.error(`Unexpected error: ${error}`)
         }
     }
 })

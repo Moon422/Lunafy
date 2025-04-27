@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using Lunafy.Api.Areas.Admin.Factories;
 using Lunafy.Core.Infrastructure;
-using Lunafy.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

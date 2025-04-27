@@ -1,15 +1,44 @@
 import { defineStore } from 'pinia'
 
 export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        token: '' as string,
+    state: (): {
+        token: string | null,
+        firstname: string | null,
+        lastname: string | null,
+        email: string | null,
+        isAdmin: boolean,
+        isArtist: boolean,
+    } => ({
+        token: null,
+        firstname: null,
+        lastname: null,
+        email: null,
+        isAdmin: false,
+        isArtist: false,
     }),
     actions: {
-        setToken(newToken: string) {
-            this.token = newToken
+        setState({ token, firstname, lastname, email, isAdmin, isArtist }: {
+            token: string | null,
+            firstname: string | null,
+            lastname: string | null,
+            email: string | null,
+            isAdmin: boolean,
+            isArtist: boolean,
+        }) {
+            this.token = token
+            this.firstname = firstname
+            this.lastname = lastname
+            this.email = email
+            this.isAdmin = isAdmin
+            this.isArtist = isArtist
         },
-        clearToken() {
-            this.token = ''
+        clearState() {
+            this.token = null
+            this.firstname = null
+            this.lastname = null
+            this.email = null
+            this.isAdmin = false
+            this.isArtist = false
         }
     }
 })

@@ -5,7 +5,7 @@ namespace Lunafy.Services;
 
 public interface IRefreshTokenService
 {
-    Task<RefreshToken?> GetRefreshTokenByTokendAsync(string token);
+    Task<RefreshToken?> GetRefreshTokenByTokenAsync(string token);
     Task CreateRefreshTokenAsync(RefreshToken refreshToken);
     Task UpdateRefreshTokenAsync(RefreshToken refreshToken);
 }

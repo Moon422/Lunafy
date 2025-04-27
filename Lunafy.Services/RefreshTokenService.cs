@@ -22,7 +22,7 @@ public class RefreshTokenService : IRefreshTokenService
         _cacheManager = cacheManager;
     }
 
-    public async Task<RefreshToken?> GetRefreshTokenByTokendAsync(string token)
+    public async Task<RefreshToken?> GetRefreshTokenByTokenAsync(string token)
     {
         if (!Guid.TryParse(token, out var _))
             return null;

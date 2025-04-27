@@ -21,9 +21,25 @@ public class Startup
     }
 
     public IConfiguration Configuration { get; }
+    private readonly string _myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
     public void ConfigureServices(IServiceCollection services)
     {
+        // var corsOrigins = Configuration.GetValue<string[]>("AllowedOrigins")
+        //     ?? throw new InvalidOperationException("Cors origins cannot be empty");
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy(name: _myAllowSpecificOrigins,
+                policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173")
+                        .AllowCredentials()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+        });
+
         services.AddHttpContextAccessor();
 
         services.AddMemoryCache();
@@ -99,6 +115,8 @@ public class Startup
         app.UseStaticFiles();
 
         app.UseRouting();
+
+        app.UseCors(_myAllowSpecificOrigins);
 
         app.UseAuthentication();
         app.UseAuthorization();
