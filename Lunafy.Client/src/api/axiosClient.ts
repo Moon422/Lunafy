@@ -35,9 +35,9 @@ export function createAxiosClient(router: Router): AxiosInstance {
         return new Promise((resolve, reject) => {
             const timeout = 10000
 
-            const timeoutId = setTimeout(() => {
-                reject(new Error('Refresh token timeout'))
-            }, timeout)
+            // const timeoutId = setTimeout(() => {
+            //     reject(new Error('Refresh token timeout'))
+            // }, timeout)
 
             subscribeTokenRefresh((newToken) => {
                 clearTimeout(timeoutId)
@@ -67,6 +67,9 @@ export function createAxiosClient(router: Router): AxiosInstance {
     axiosClient.interceptors.response.use(
         (response: AxiosResponse) => response,
         async (error: AxiosError): Promise<any> => {
+            console.log("What the fuck happened?")
+            console.log('error:', error)
+
             const authStore = useAuthStore()
             const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean }
 

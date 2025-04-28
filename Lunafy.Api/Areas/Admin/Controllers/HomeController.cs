@@ -23,6 +23,7 @@ public class HomeApiController : ControllerBase
     }
 
     [HttpGet("get-total-users")]
+    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> GetTotalUsers()
     {
         var user = await _workContext.GetCurrentUserAsync();

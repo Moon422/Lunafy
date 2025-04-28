@@ -4,6 +4,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import Vue3Toastify, { type ToastContainerOptions } from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
 import { createAxiosClient } from './api/axiosClient'
 
 const app = createApp(App)
@@ -15,7 +16,7 @@ app.use(Vue3Toastify, {
     multiple: true,
     limit: 3,
     position: 'bottom-right',
-    closeButton: true
+    closeButton: false
 } as ToastContainerOptions)
 
 const axiosClient = createAxiosClient(router)

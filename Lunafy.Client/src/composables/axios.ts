@@ -11,7 +11,6 @@ export function useAxios() {
     // Instance-specific reactive states
     const loading: Ref<boolean> = ref(false)
     const error: Ref<string | null> = ref(null)
-    const data: Ref<any> = ref(null)
 
     // Generic request wrapper
     async function request<T>(
@@ -22,7 +21,6 @@ export function useAxios() {
     ): Promise<AxiosResponse<T>> {
         loading.value = true
         error.value = null
-        data.value = null
 
         if (!axiosClient) {
             throw new Error('axiosClient not provided. Ensure it is provided using app.provide("axiosClient", axiosClient).')
@@ -49,7 +47,6 @@ export function useAxios() {
                 default:
                     throw new Error(`Unsupported method: ${method} `)
             }
-            data.value = response.data
             return response
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : String(err)
@@ -75,7 +72,6 @@ export function useAxios() {
     return {
         loading,
         error,
-        data,
         get,
         post,
         put,

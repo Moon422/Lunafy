@@ -11,6 +11,8 @@ const authStore = useAuthStore()
 const { loading, error, get } = useAxios()
 
 onMounted(async () => {
+    console.log(authStore)
+
     console.log('component mounted')
     try {
         console.log("makking call")

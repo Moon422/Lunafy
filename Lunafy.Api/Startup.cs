@@ -33,10 +33,10 @@ public class Startup
             options.AddPolicy(name: _myAllowSpecificOrigins,
                 policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173")
-                        .AllowCredentials()
+                    policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
                         .AllowAnyMethod()
-                        .AllowAnyHeader();
+                        .AllowAnyHeader()
+                        .AllowCredentials();
                 });
         });
 

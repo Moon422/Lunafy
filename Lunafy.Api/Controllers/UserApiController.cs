@@ -98,9 +98,11 @@ public class UserApiController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
         var user = await _userService.GetUserByUseranmeAsync(model.Username);
+        var response = new HttpResponseModel<LoginResponseModel>();
         if (user is null || !await _userService.VerifyPasswordAsync(user.Id, model.Password))
         {
-            return BadRequest("Invalid credentials.");
+            response.Errors.Add("Invalid credentials.");
+            return BadRequest(response);
         }
 
         var userModel = _mapper.Map<UserModel>(user);
@@ -111,7 +113,9 @@ public class UserApiController : ControllerBase
             Jwt = jwt
         };
 
-        return Ok(loginResponse);
+        response.Data = loginResponse;
+
+        return Ok(response);
     }
 
     [HttpPost("[action]")]
