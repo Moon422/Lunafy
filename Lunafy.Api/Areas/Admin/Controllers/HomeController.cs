@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
 using Lunafy.Api.Areas.Admin.Factories;
+using Lunafy.Api.Areas.Admin.Models.Home;
+using Lunafy.Api.Models;
 using Lunafy.Core.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,16 +25,18 @@ public class HomeApiController : ControllerBase
     }
 
     [HttpGet("get-total-users")]
-    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> GetTotalUsers()
     {
         var user = await _workContext.GetCurrentUserAsync();
+        var responseModel = new HttpResponseModel<TotalUsersStatModel>();
         if (user is null || !user.IsAdmin)
         {
             return Forbid();
         }
 
         var model = await _homeModelsFactory.PrepareTotalUsersStatModelAsync();
-        return Ok(model);
+        responseModel.Data = model;
+
+        return Ok(responseModel);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Lunafy.Api.Areas.Admin.Models.Home;
+using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Services;
 
 namespace Lunafy.Api.Areas.Admin.Factories;
@@ -10,6 +11,7 @@ public interface IHomeModelsFactory
     Task<TotalUsersStatModel> PrepareTotalUsersStatModelAsync();
 }
 
+[ScopeDependency(typeof(IHomeModelsFactory))]
 public class HomeModelsFactory : IHomeModelsFactory
 {
     private readonly IUserService _userService;
@@ -22,21 +24,17 @@ public class HomeModelsFactory : IHomeModelsFactory
     public async Task<TotalUsersStatModel> PrepareTotalUsersStatModelAsync()
     {
         var now = DateTime.UtcNow;
-        var presentDataFrom = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        var previousDataTill = presentDataFrom.Subtract(new TimeSpan(1));
-        var previousDataFrom = presentDataFrom.AddMonths(-1);
+        var previousDataTill = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).Subtract(new TimeSpan(1));
 
         var findUserCommand = new FindUsersCommand
         {
-            CreatedOnFromUtc = presentDataFrom,
             CreatedOnTillUtc = now
         };
         var presentUserCount = await _userService.CountUsersAsync(findUserCommand);
 
         findUserCommand = new FindUsersCommand
         {
-            CreatedOnFromUtc = previousDataFrom,
             CreatedOnTillUtc = previousDataTill
         };
         var previousUserCount = await _userService.CountUsersAsync(findUserCommand);
@@ -49,7 +47,7 @@ public class HomeModelsFactory : IHomeModelsFactory
             PreviousUserCount = previousUserCount,
         };
 
-        if (presentUserCount <= 0)
+        if (previousUserCount <= 0)
         {
             model.InfiniteIncrement = true;
             model.DidUserIncremented = true;

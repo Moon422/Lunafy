@@ -1,39 +1,65 @@
 <script setup lang="ts">
-import axios from 'axios'
 import type { TotalUsersStatApiResponse } from '@/types/admin'
 import { useAuthStore } from '@/stores/auth'
-import { onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { toast } from 'vue3-toastify'
 import type { HttpResponseModel } from '@/types/common'
-import { useAxios } from '@/composables/axios'
+
+const baseUrl = import.meta.env.VITE_API_URL
 
 const authStore = useAuthStore()
-const { loading, error, get } = useAxios()
+
+const loading = ref<boolean>(false)
+const error = ref<string | null>(null)
+
+const currentCount = ref<number>(0)
+const infiniteIncrement = ref<boolean>(false)
+const changePercentage = ref<number>(0)
+
+watch(error, () => {
+    if (error.value && error.value.length > 0) {
+        toast.error(error.value, { onClose: () => error.value = null })
+    }
+})
 
 onMounted(async () => {
-    console.log(authStore)
-
-    console.log('component mounted')
     try {
-        console.log("makking call")
-        const { data: { data, errors }, status } = await get<HttpResponseModel<TotalUsersStatApiResponse>>('/api/admin/home/get-total-users')
-        console.log('get call completed')
+        console.log(authStore.token)
 
-        if (status !== axios.HttpStatusCode.Ok) {
-            const errorMsg = errors.length ? `Failed to fetch data: ${errors}`
-                : 'Failed to fetch data'
-
-            toast.error(errorMsg)
-            return
+        const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
+        if (authStore.token) {
+            headers.append('Authorization', `Bearer ${authStore.token}`)
         }
 
-        console.log('data:', data)
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            toast.error(`Axios error: ${error.response?.status}`)
-        } else {
-            toast.error(`Unexpected error: ${error}`)
+        console.log(headers)
+        alert("fuck")
+
+        const response = await fetch(`${baseUrl}/api/admin/home/get-total-users`, {
+            method: 'GET', headers, credentials: 'include'
+        })
+
+        const { data, errors }: HttpResponseModel<TotalUsersStatApiResponse> = await response.json()
+        if (!response.ok) {
+            const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
+            error.value = errorMsg
+            return false
         }
+
+        if (!data) {
+            const errorMsg = "Something went wrong. Please try again."
+            error.value = errorMsg
+            return false
+        }
+
+        currentCount.value = data.presentUserCount
+        infiniteIncrement.value = data.infiniteIncrement
+        changePercentage.value = data.changePercentage
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        error.value = errorMessage
+        throw err
+    } finally {
+        loading.value = false
     }
 })
 
@@ -47,10 +73,17 @@ onMounted(async () => {
                 <img src="/image.png" alt="profile picture" width="50" class="w-100">
             </div>
             <div>
-                <h6>Total Users <span class="d-none d-sm-inline fs-6 text-success"><i
-                            class="bi bi-arrow-up-short"></i>12%</span></h6>
+                <h6>Total Users
+                    <span class="d-none d-sm-inline fs-6 text-success" v-if="!infiniteIncrement">
+                        <i class="bi bi-arrow-up-short"></i>12%
+                    </span>
+                    <span class="d-none d-sm-inline fs-6 text-success" v-else>
+                        <i class="bi bi-arrow-up-short"></i>
+                        <i class="bi bi-infinity ms-1"></i>
+                    </span>
+                </h6>
                 <h3>
-                    24,571
+                    {{ currentCount }}
                 </h3>
             </div>
         </div>

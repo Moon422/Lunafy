@@ -9,6 +9,7 @@ export function createAxiosClient(router: Router): AxiosInstance {
         baseURL: import.meta.env.VITE_API_URL,
         timeout: 10000,
         withCredentials: true,
+        withXSRFToken: false,
         headers: {
             'Content-Type': 'application/json',
         },
@@ -35,9 +36,9 @@ export function createAxiosClient(router: Router): AxiosInstance {
         return new Promise((resolve, reject) => {
             const timeout = 10000
 
-            // const timeoutId = setTimeout(() => {
-            //     reject(new Error('Refresh token timeout'))
-            // }, timeout)
+            const timeoutId = setTimeout(() => {
+                reject(new Error('Refresh token timeout'))
+            }, timeout)
 
             subscribeTokenRefresh((newToken) => {
                 clearTimeout(timeoutId)

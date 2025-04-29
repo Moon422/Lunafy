@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { useAxios } from '@/composables/axios'
 import { useAuthStore } from '@/stores/auth'
 import type { HttpResponseModel } from '@/types/common'
 import type { LoginResponseModel } from '@/types/user'
-import axios from 'axios'
-import { ref, watch } from 'vue'
+import { ref, defineProps, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
+
+const baseUrl = import.meta.env.VITE_API_URL
+
+const props = defineProps<{ redirectUrl?: string }>()
 
 const username = ref<string>('')
 const password = ref<string>('')
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { loading, error, post } = useAxios()
+
+const loading = ref<boolean>(false)
+const error = ref<string | null>(null)
 
 watch(error, () => {
     if (error.value && error.value.length > 0) {
@@ -22,35 +26,49 @@ watch(error, () => {
 })
 
 const handleLogin = async (e: MouseEvent) => {
-    const requestBody = {
+    loading.value = true
+
+    const payload = {
         username: username.value,
         password: password.value
     }
 
-    const { data: { data, errors }, status } = await post<HttpResponseModel<LoginResponseModel>>('/api/user/login', requestBody)
-    console.log('status:', status)
-    console.log('data:', data)
-    console.log('error:', error)
+    try {
+        const response = await fetch(`${baseUrl}/api/user/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        })
 
-    if (status != axios.HttpStatusCode.Ok) {
-        const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
-        error.value = errorMsg
-        return false
+        const { data, errors }: HttpResponseModel<LoginResponseModel> = await response.json()
+        if (!response.ok) {
+            const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
+            error.value = errorMsg
+            return false
+        }
+
+        if (!data) {
+            const errorMsg = "Something went wrong. Please try again."
+            error.value = errorMsg
+            return false
+        }
+
+        const { user: { firstname, lastname, email, isAdmin, isArtist }, jwt } = data
+
+        authStore.setState({
+            token: jwt, firstname, lastname, email, isAdmin, isArtist
+        })
+
+        router.push(props.redirectUrl || '/admin')
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        error.value = errorMessage
+        throw err
+    } finally {
+        loading.value = false
     }
-
-    if (!data) {
-        const errorMsg = "Something went wrong. Please try again."
-        error.value = errorMsg
-        return false
-    }
-
-    const { user: { firstname, lastname, email, isAdmin, isArtist }, jwt } = data
-
-    authStore.setState({
-        token: jwt, firstname, lastname, email, isAdmin, isArtist
-    })
-
-    router.push('/admin')
 }
 </script>
 
