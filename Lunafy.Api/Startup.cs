@@ -1,6 +1,8 @@
 using System;
 using System.Text;
 using Lunafy.Data;
+using Lunafy.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -87,14 +89,64 @@ public class Startup
         services.AddAuthentication().AddJwtBearer(
             options =>
             {
+                var secret = Configuration.GetSection("Secret").Value
+                    ?? throw new InvalidOperationException("JWT secret missing.");
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     ValidateAudience = false,
                     ValidateIssuer = false,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                        Configuration.GetSection("Secret").Value!
-                    ))
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(secret))
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = async context =>
+                    {
+                        if (context.Exception is SecurityTokenExpiredException)
+                        {
+                            var httpContext = context.HttpContext;
+                            var token = httpContext.Request.Cookies["refresh-token"];
+
+                            if (string.IsNullOrWhiteSpace(token))
+                            {
+
+                            }
+
+                            var refreshTokenService = httpContext.RequestServices.GetRequiredService<IRefreshTokenService>();
+                            var refreshToken = await refreshTokenService.GetRefreshTokenByTokenAsync(token);
+                            if (refreshToken is null)
+                            {
+                                return;
+                            }
+
+                            if (!refreshToken.IsValid)
+                            {
+                                return;
+                            }
+
+                            var userService = httpContext.RequestServices.GetRequiredService<IUserService>();
+                            var user = await userService.GetUserByIdAsync(refreshToken.UserId);
+                            if (user is null)
+                            {
+                                return;
+                            }
+
+                            var expirationDurationRemaining = refreshToken.ExpiryDate - DateTime.UtcNow;
+                            if (expirationDurationRemaining < TimeSpan.Zero)
+                            {
+                                return;
+                            }
+
+                            var expirationHourRemaining = expirationDurationRemaining.TotalHours;
+                            if (expirationHourRemaining <= 24)
+                            {
+
+                            }
+                        }
+                    }
                 };
             }
         );
