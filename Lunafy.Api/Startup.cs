@@ -1,10 +1,17 @@
 using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
+using Lunafy.Core.Domains;
 using Lunafy.Data;
 using Lunafy.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -103,6 +110,18 @@ public class Startup
 
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last() ?? string.Empty;
+
+                        if (string.IsNullOrEmpty(token))
+                        {
+                            token = context.Request.Cookies["jwt"];
+                        }
+
+                        context.Token = token;
+                        return Task.CompletedTask;
+                    },
                     OnAuthenticationFailed = async context =>
                     {
                         if (context.Exception is SecurityTokenExpiredException)
@@ -112,7 +131,7 @@ public class Startup
 
                             if (string.IsNullOrWhiteSpace(token))
                             {
-
+                                return;
                             }
 
                             var refreshTokenService = httpContext.RequestServices.GetRequiredService<IRefreshTokenService>();
@@ -140,11 +159,19 @@ public class Startup
                                 return;
                             }
 
+                            var authService = httpContext.RequestServices.GetRequiredService<IAuthService>();
                             var expirationHourRemaining = expirationDurationRemaining.TotalHours;
                             if (expirationHourRemaining <= 24)
                             {
-
+                                await authService.GenerateRefreshToken(user);
                             }
+
+                            var jwt = await authService.GenerateJwtToken(user);
+
+                            user.LastLogin = DateTime.UtcNow;
+                            await userService.UpdateUserAsync(user);
+
+                            httpContext.Response.Cookies.Append("jwt", jwt);
                         }
                     }
                 };

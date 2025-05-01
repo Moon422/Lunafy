@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Lunafy.Api.Models;
@@ -12,9 +8,7 @@ using Lunafy.Data;
 using Lunafy.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Lunafy.Api.Controllers;
 
@@ -26,12 +20,14 @@ public class UserApiController : ControllerBase
     private readonly ITransactionManager _transactionManager;
     private readonly IUserService _userService;
     private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IAuthService _authService;
     private readonly IConfiguration _configuration;
 
     public UserApiController(IMapper mapper,
         ITransactionManager transactionManager,
         IUserService userService,
         IRefreshTokenService refreshTokenService,
+        IAuthService authService,
         IConfiguration configuration)
     {
         _mapper = mapper;
@@ -39,53 +35,16 @@ public class UserApiController : ControllerBase
         _userService = userService;
         _refreshTokenService = refreshTokenService;
         _configuration = configuration;
+        _authService = authService;
     }
 
     #region Utilities
 
-    private async Task GenerateRefreshToken(User user)
-    {
-        var refreshToken = new RefreshToken
-        {
-            UserId = user.Id
-        };
-
-        await _refreshTokenService.CreateRefreshTokenAsync(refreshToken);
-
-        HttpContext.Response.Cookies.Append(
-            "refresh-token",
-            refreshToken.Token,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Expires = DateTimeOffset.UtcNow.AddDays(7)
-            }
-        );
-    }
-
     private async Task<string> LoginAsync(User user)
     {
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Email, user.Email)
-        };
+        var jwt = await _authService.GenerateJwtToken(user);
+        await _authService.GenerateRefreshToken(user);
 
-        var roles = await _userService.GetUserRolesAsync(user.Id);
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role.Name));
-        }
-
-        var secret = _configuration.GetSection("Secret").Value
-            ?? throw new InvalidOperationException();
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
-        var token = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddMinutes(5), signingCredentials: creds);
-        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-        await GenerateRefreshToken(user);
         user.LastLogin = DateTime.UtcNow;
         await _userService.UpdateUserAsync(user);
 
@@ -205,11 +164,11 @@ public class UserApiController : ControllerBase
         var expirationHourRemaining = expirationDurationRemaining.TotalHours;
         if (expirationHourRemaining <= 24)
         {
-            await GenerateRefreshToken(user);
+            await _authService.GenerateRefreshToken(user);
         }
 
         var userModel = _mapper.Map<UserModel>(user);
-        var jwt = await LoginAsync(user);
+        var jwt = await _authService.GenerateJwtToken(user);
         var loginResponse = new LoginResponseModel
         {
             User = userModel,
