@@ -122,58 +122,6 @@ public class Startup
                         context.Token = token;
                         return Task.CompletedTask;
                     },
-                    OnAuthenticationFailed = async context =>
-                    {
-                        if (context.Exception is SecurityTokenExpiredException)
-                        {
-                            var httpContext = context.HttpContext;
-                            var token = httpContext.Request.Cookies["refresh-token"];
-
-                            if (string.IsNullOrWhiteSpace(token))
-                            {
-                                return;
-                            }
-
-                            var refreshTokenService = httpContext.RequestServices.GetRequiredService<IRefreshTokenService>();
-                            var refreshToken = await refreshTokenService.GetRefreshTokenByTokenAsync(token);
-                            if (refreshToken is null)
-                            {
-                                return;
-                            }
-
-                            if (!refreshToken.IsValid)
-                            {
-                                return;
-                            }
-
-                            var userService = httpContext.RequestServices.GetRequiredService<IUserService>();
-                            var user = await userService.GetUserByIdAsync(refreshToken.UserId);
-                            if (user is null)
-                            {
-                                return;
-                            }
-
-                            var expirationDurationRemaining = refreshToken.ExpiryDate - DateTime.UtcNow;
-                            if (expirationDurationRemaining < TimeSpan.Zero)
-                            {
-                                return;
-                            }
-
-                            var authService = httpContext.RequestServices.GetRequiredService<IAuthService>();
-                            var expirationHourRemaining = expirationDurationRemaining.TotalHours;
-                            if (expirationHourRemaining <= 24)
-                            {
-                                await authService.GenerateRefreshToken(user);
-                            }
-
-                            var jwt = await authService.GenerateJwtToken(user);
-
-                            user.LastLogin = DateTime.UtcNow;
-                            await userService.UpdateUserAsync(user);
-
-                            httpContext.Response.Cookies.Append("jwt", jwt);
-                        }
-                    }
                 };
             }
         );
