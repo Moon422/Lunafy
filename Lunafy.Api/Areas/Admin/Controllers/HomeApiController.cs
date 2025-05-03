@@ -28,12 +28,12 @@ public class HomeApiController : ControllerBase
     public async Task<IActionResult> GetTotalUsers()
     {
         var user = await _workContext.GetCurrentUserAsync();
-        var responseModel = new HttpResponseModel<TotalUsersStatModel>();
         if (user is null || !user.IsAdmin)
         {
             return Forbid();
         }
 
+        var responseModel = new HttpResponseModel<TotalUsersStatModel>();
         var model = await _homeModelsFactory.PrepareTotalUsersStatModelAsync();
         responseModel.Data = model;
 

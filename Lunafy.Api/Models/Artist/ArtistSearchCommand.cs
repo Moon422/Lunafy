@@ -1,6 +1,6 @@
 namespace Lunafy.Api.Models.Artist;
 
-public class ArtistSearchCommand : SearchCommand
+public record ArtistSearchCommand : SearchCommand
 {
     public string? Firstname { get; set; }
     public string? Lastname { get; set; }

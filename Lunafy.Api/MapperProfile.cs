@@ -10,6 +10,12 @@ public class MapperProfile : Profile
 {
     public MapperProfile()
     {
+        // admin models
+        CreateMap<User, Areas.Admin.Models.Users.UserReadModel>();
+        CreateMap<Areas.Admin.Models.Users.UserCreateModel, User>();
+        CreateMap<Areas.Admin.Models.Users.UserSearchCommand, FindUsersCommand>();
+
+        // public models
         CreateMap<RegistrationModel, User>();
         CreateMap<User, UserModel>();
         CreateMap<Artist, ArtistReadModel>();

@@ -6,11 +6,6 @@ using Lunafy.Services;
 
 namespace Lunafy.Api.Areas.Admin.Factories;
 
-public interface IHomeModelsFactory
-{
-    Task<TotalUsersStatModel> PrepareTotalUsersStatModelAsync();
-}
-
 [ScopeDependency(typeof(IHomeModelsFactory))]
 public class HomeModelsFactory : IHomeModelsFactory
 {

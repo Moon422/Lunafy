@@ -6,10 +6,12 @@ import { toast } from 'vue3-toastify'
 import type { HttpResponseModel } from '@/types/common'
 import { HTTP_STATUS } from '@/utils'
 import type { LoginResponseModel } from '@/types/user'
+import { useRouter } from 'vue-router'
 
 const baseUrl = import.meta.env.VITE_API_URL
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 const loading = ref<boolean>(false)
 const error = ref<string | null>(null)
@@ -60,15 +62,18 @@ watch(error, () => {
 
 onMounted(async () => {
     try {
-        const status = await fetchUserStats()
-
-        if (status === HTTP_STATUS.UNAUTHORIZED) {
-            const response = await fetch(`${baseUrl}/api/user/refresh-token`)
+        if (await fetchUserStats() === HTTP_STATUS.UNAUTHORIZED) {
+            const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
+                credentials: 'include'
+            })
             const { data, errors }: HttpResponseModel<LoginResponseModel> = await response.json()
 
-            if (response.status === HTTP_STATUS.BAD_REQUEST) {
-                const errMsg = errors.length && errors.find(x => x.trim().length > 0) || 'Something went wrong. Try again'
-                error.value = errMsg
+            if (!response.ok) {
+                router.push('/login')
+            }
+
+            if (await fetchUserStats() !== HTTP_STATUS.OK) {
+                error.value = "Failed to load User Stats. Please try again."
             }
         }
     } catch (err: unknown) {
@@ -92,7 +97,7 @@ onMounted(async () => {
             <div>
                 <h6>Total Users
                     <span class="d-none d-sm-inline fs-6 text-success" v-if="!infiniteIncrement">
-                        <i class="bi bi-arrow-up-short"></i>12%
+                        <i class="bi bi-arrow-up-short"></i>{{ changePercentage }}%
                     </span>
                     <span class="d-none d-sm-inline fs-6 text-success" v-else>
                         <i class="bi bi-arrow-up-short"></i>
