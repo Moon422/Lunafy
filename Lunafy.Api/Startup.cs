@@ -2,10 +2,13 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Lunafy.Api.Models;
 using Lunafy.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +31,25 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var errors = context.ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                var response = new HttpResponseModel
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Errors = errors
+                };
+
+                return new BadRequestObjectResult(response);
+            };
+        });
+
         // var corsOrigins = Configuration.GetValue<string[]>("AllowedOrigins")
         //     ?? throw new InvalidOperationException("Cors origins cannot be empty");
 
