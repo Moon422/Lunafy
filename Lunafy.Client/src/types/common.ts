@@ -7,3 +7,11 @@ export interface BaseHttpResponseModel {
 export interface HttpResponseModel<T> extends BaseHttpResponseModel {
     data: T | null
 }
+
+export interface SearchResultModel<T> {
+    data: T[],
+    pageNumber: number,
+    pageSize: number,
+    totalItems: number,
+    totalPages: number
+}

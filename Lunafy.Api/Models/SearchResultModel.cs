@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
-using Lunafy.Data;
 
 namespace Lunafy.Api.Models;
 

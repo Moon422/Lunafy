@@ -36,8 +36,18 @@ const router = createRouter({
         },
         {
           path: 'users',
-          name: 'admin-users',
-          component: () => import('@/views/admin/users.vue')
+          children: [
+            {
+              path: '',
+              name: 'admin-users',
+              component: () => import('@/views/admin/users.vue')
+            },
+            {
+              path: ':id',
+              name: 'admin-user-edit',
+              component: () => import('@/views/admin/users/edit.vue')
+            }
+          ]
         },
         {
           path: 'tracks',

@@ -8,9 +8,16 @@ type PaginationItem = {
     isEllipsis: boolean
 }
 
+// const emits = defineEmits(['changePageSize', 'changePage'])
+const emits = defineEmits<{
+    (e: 'changePageSize', pageSize: number): void,
+    (e: 'changePage', page: number): void
+}>()
+
 const props = defineProps<{
     totalPages: number,
-    currentPage: number
+    currentPage: number,
+    pageSize: number
 }>()
 const maxPaginationCount = 7
 
@@ -45,7 +52,7 @@ const evaulatePager = () => {
 
     leftDotEnd.value = props.currentPage - 1 > end - 3
         ? end - 3
-        : props.currentPage - 2// props.currentPage - 2
+        : props.currentPage - 2
     leftDotStart.value = leftDotEnd.value - leftTruncateCount + 1
 }
 
@@ -150,19 +157,31 @@ const pageItems = computed((): PaginationItem[] => {
 </script>
 
 <template>
-    <nav>
-        <ul class="pagination">
-            <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+    <div class="d-flex flex-column flex-lg-row justify-content-between">
+        <div>
+            <select :value="pageSize" class="form-select"
+                @change="(e: Event) => emits('changePageSize', parseInt((e.target as HTMLSelectElement).value))">
+                <option value="5">5</option>
+                <option value="15">15</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+        <nav>
+            <ul class="pagination">
+                <li class="page-item"><a class="page-link" href="#">Previous</a></li>
 
-            <li class="page-item" v-for="pageItem in pageItems">
-                <button class="page-link" v-if="!pageItem.isEllipsis" :class="{ 'active': pageItem.isActive }">{{
-                    pageItem.label }}</button>
-                <button class="page-link" v-else disabled>...</button>
-            </li>
+                <li class="page-item" v-for="pageItem in pageItems">
+                    <button class="page-link" @click="emits('changePage', parseInt(pageItem.value || '1'))"
+                        v-if="!pageItem.isEllipsis" :class="{ 'active': pageItem.isActive }">{{
+                            pageItem.label }}</button>
+                    <button class="page-link" v-else disabled>...</button>
+                </li>
 
-            <li class="page-item"><a class="page-link" href="#">Next</a></li>
-        </ul>
-    </nav>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
 </template>
 
 <style lang="css" scoped></style>
