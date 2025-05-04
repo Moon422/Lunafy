@@ -61,6 +61,7 @@ watch(error, () => {
 })
 
 onMounted(async () => {
+    loading.value = true
     try {
         if (await fetchUserStats() === HTTP_STATUS.UNAUTHORIZED) {
             const response = await fetch(`${baseUrl}/api/user/refresh-token`, {

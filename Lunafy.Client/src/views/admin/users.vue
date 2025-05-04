@@ -61,6 +61,7 @@ const fetchUsers = async (page: number, pageSize: number) => {
 }
 
 watch([page, pageSize], async () => {
+    loading.value = true
     try {
         if (await fetchUsers(page.value, pageSize.value) === HTTP_STATUS.UNAUTHORIZED) {
             const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
