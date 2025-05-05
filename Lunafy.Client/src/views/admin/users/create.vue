@@ -1,37 +1,48 @@
 <script setup lang="ts">
 import Loader from '@/components/admin/Loader.vue'
 import { useAuthStore } from '@/stores/auth'
-import type { UserReadModel } from '@/types/admin'
+import type { UserCreateModel, UserReadModel } from '@/types/admin'
 import type { HttpResponseModel } from '@/types/common'
-import type { LoginResponseModel } from '@/types/user'
 import { HTTP_STATUS } from '@/utils'
-import { onMounted, reactive, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { reactive, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
 
 const baseUrl = import.meta.env.VITE_API_URL
 
 const authStore = useAuthStore()
 const router = useRouter()
-const route = useRoute()
-const userId = route.params.id
 
 const state = reactive<{
     loading: boolean,
     error?: string | null,
-    userModel?: UserReadModel | null
+    userModel: UserCreateModel
 }>({
-    loading: false
+    loading: false,
+    userModel: {
+        firstname: '',
+        lastname: '',
+        username: '',
+        email: '',
+        isAdmin: false,
+        isArtist: false
+    }
 })
 
-const fetchUser = async () => {
+watch(() => state.error, () => {
+    if (state.error && state.error.length > 0) {
+        toast.error(state.error, { onClose: () => state.error = null })
+    }
+})
+
+const createUser = async (firstname: string, lastname: string, username: string, email: string, isAdmin: boolean, isArtist: boolean) => {
     const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
     if (authStore.token) {
         headers.append('Authorization', `Bearer ${authStore.token}`)
     }
 
-    const response = await fetch(`${baseUrl}/api/admin/user/${userId}`, {
-        method: 'GET', headers, credentials: 'include'
+    const response = await fetch(`${baseUrl}/api/admin/user`, {
+        method: 'POST', headers, credentials: 'include', body: JSON.stringify({ firstname, lastname, username, email, isAdmin, isArtist })
     })
 
     if (response.status === HTTP_STATUS.UNAUTHORIZED) {
@@ -51,51 +62,28 @@ const fetchUser = async () => {
         return response.status
     }
 
-    state.userModel = data
     return response.status
 }
 
-const deleteUser = async () => {
-    const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
-    if (authStore.token) {
-        headers.append('Authorization', `Bearer ${authStore.token}`)
-    }
-
-    const response = await fetch(`${baseUrl}/api/admin/user/${userId}`, {
-        method: 'DELETE', headers, credentials: 'include'
-    })
-
-    if (response.status === HTTP_STATUS.UNAUTHORIZED) {
-        return response.status
-    }
-
-    const { errors }: HttpResponseModel<UserReadModel> = await response.json()
-    if (!response.ok) {
-        const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
-        state.error = errorMsg
-        return response.status
-    }
-
-    return response.status
-}
-
-const onDeleteConfirmation = async () => {
+const onUserCreateSubmission = async () => {
     state.loading = true
     try {
-        if (await deleteUser() === HTTP_STATUS.UNAUTHORIZED) {
+        if (await createUser(state.userModel.firstname, state.userModel.lastname, state.userModel.username, state.userModel.email, state.userModel.isAdmin, state.userModel.isArtist) === HTTP_STATUS.UNAUTHORIZED) {
             const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
                 credentials: 'include'
             })
-            const { data, errors }: HttpResponseModel<LoginResponseModel> = await response.json()
+            const { data, errors }: HttpResponseModel<UserReadModel> = await response.json()
 
             if (!response.ok) {
                 router.push('/login')
             }
 
-            if (await deleteUser() !== HTTP_STATUS.NO_CONTENT) {
-                state.error = "Failed to delete user. Please try again."
+            if (await createUser(state.userModel.firstname, state.userModel.lastname, state.userModel.username, state.userModel.email, state.userModel.isAdmin, state.userModel.isArtist) !== HTTP_STATUS.CREATED) {
+                state.error = "Failed to load User Stats. Please try again."
             }
         }
+
+        router.push('/admin/users')
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err)
         state.error = errorMessage
@@ -104,42 +92,10 @@ const onDeleteConfirmation = async () => {
         state.loading = false
     }
 }
-
-watch(() => state.error, () => {
-    if (state.error && state.error.length > 0) {
-        toast.error(state.error, { onClose: () => state.error = null })
-    }
-})
-
-onMounted(async () => {
-    state.loading = true
-    try {
-        if (await fetchUser() === HTTP_STATUS.UNAUTHORIZED) {
-            const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
-                credentials: 'include'
-            })
-            const { data, errors }: HttpResponseModel<LoginResponseModel> = await response.json()
-
-            if (!response.ok) {
-                router.push('/login')
-            }
-
-            if (await fetchUser() !== HTTP_STATUS.OK) {
-                state.error = "Failed to load user data. Please try again."
-            }
-        }
-    } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : String(err)
-        state.error = errorMessage
-        throw err
-    } finally {
-        state.loading = false
-    }
-})
 </script>
 
 <template>
-    <form @submit.prevent="console.log('form submitted...')">
+    <form @submit.prevent="onUserCreateSubmission">
         <!-- Header -->
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
@@ -148,11 +104,6 @@ onMounted(async () => {
                     <button type="submit" class="btn btn-success me-2">
                         <i class="bi bi-floppy-fill"></i>
                         Save
-                    </button>
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#deleteConfirmation" @click.prevent="">
-                        <i class="bi bi-trash-fill"></i>
-                        Delete
                     </button>
                 </div>
             </div>
@@ -176,7 +127,7 @@ onMounted(async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="text" class="form-control" id="firstname" placeholder="John"
-                                            :value="state.userModel?.firstname">
+                                            :value="state.userModel.firstname">
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -185,7 +136,7 @@ onMounted(async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="text" class="form-control" id="lastname" placeholder="Doe"
-                                            :value="state.userModel?.lastname">
+                                            :value="state.userModel.lastname">
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -194,7 +145,7 @@ onMounted(async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="email" class="form-control" id="email"
-                                            placeholder="johndoe@email.com" :value="state.userModel?.email">
+                                            placeholder="johndoe@email.com" :value="state.userModel.email">
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -203,7 +154,7 @@ onMounted(async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="username" class="form-control" id="username" placeholder="john_doe"
-                                            :value="state.userModel?.username">
+                                            :value="state.userModel.username">
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -212,9 +163,8 @@ onMounted(async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="checkbox" class="form-check-input" id="isadmin"
-                                            :checked="state.userModel?.isAdmin" @change="() => {
-                                                if (state.userModel) state.userModel.isAdmin = !state.userModel.isAdmin
-                                            }">
+                                            :checked="state.userModel.isAdmin"
+                                            @change="() => state.userModel.isAdmin = !state.userModel.isAdmin">
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -223,9 +173,8 @@ onMounted(async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="checkbox" class="form-check-input" id="isartist"
-                                            :checked="state.userModel?.isArtist" @change="() => {
-                                                if (state.userModel) state.userModel.isArtist = !state.userModel.isArtist
-                                            }">
+                                            :checked="state.userModel.isArtist"
+                                            @change="() => state.userModel.isArtist = !state.userModel.isArtist">
                                     </div>
                                 </div>
                             </div>
@@ -235,34 +184,6 @@ onMounted(async () => {
             </div>
         </div>
     </form>
-
-    <!-- Modal -->
-    <div class="modal fade" id="deleteConfirmation" tabindex="-1" aria-labelledby="deleteConfirmationLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="deleteConfirmationLabel">Are you sture you want to delete the user?
-                    </h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    The user will be soft deleted.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-danger">Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- <div v-if="state.loading"
-        style="background: rgba(0.35,0.35,0.35,0.60); display: flex; justify-content: center; align-items: center; position: absolute; top: 0; right: 0; left: 0; bottom: 0; z-index: 999999;">
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div> -->
-
     <Loader :loading="state.loading" />
 </template>
 

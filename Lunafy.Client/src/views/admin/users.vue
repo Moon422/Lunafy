@@ -2,11 +2,12 @@
 import { ref, watch } from 'vue'
 import Pagination from '@/components/admin/Pagination.vue'
 import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { HTTP_STATUS } from '@/utils'
 import type { HttpResponseModel, SearchResultModel } from '@/types/common'
-import type { UserModel } from '@/types/admin'
+import type { UserReadModel } from '@/types/admin'
 import type { LoginResponseModel } from '@/types/user'
+import Loader from '@/components/admin/Loader.vue'
 
 const baseUrl = import.meta.env.VITE_API_URL
 
@@ -20,7 +21,7 @@ const page = ref<number>(1)
 const totalPages = ref<number>(0)
 const pageSize = ref<number>(5)
 
-const users = ref<UserModel[] | null>()
+const users = ref<UserReadModel[] | null>()
 
 const fetchUsers = async (page: number, pageSize: number) => {
     const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
@@ -41,7 +42,7 @@ const fetchUsers = async (page: number, pageSize: number) => {
         return response.status
     }
 
-    const { data, errors }: HttpResponseModel<SearchResultModel<UserModel>> = await response.json()
+    const { data, errors }: HttpResponseModel<SearchResultModel<UserReadModel>> = await response.json()
     if (!response.ok) {
         const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
         error.value = errorMsg
@@ -92,10 +93,10 @@ watch([page, pageSize], async () => {
     <div class="container">
         <div class="d-flex justify-content-between align-items-center">
             <h3>Users</h3>
-            <button class="btn btn-primary">
+            <RouterLink to="/admin/users/create" class="btn btn-primary">
                 <i class="bi bi-plus"></i>
-                New Report
-            </button>
+                New User
+            </RouterLink>
         </div>
     </div>
 
@@ -159,4 +160,6 @@ watch([page, pageSize], async () => {
         <Pagination :totalPages="totalPages" :currentPage="page" :pageSize="pageSize"
             @changePageSize="(x) => pageSize = x" @changePage="(x) => page = x" />
     </div>
+
+    <Loader :loading="loading" />
 </template>

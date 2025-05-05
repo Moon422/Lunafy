@@ -9,13 +9,18 @@ export interface TotalUsersStatApiResponse {
 }
 
 export interface UserModel {
-    id: number
     firstname: string
     lastname: string
     username: string
     email: string
     isAdmin: boolean
     isArtist: boolean
+}
+
+export interface UserCreateModel extends UserModel { }
+
+export interface UserReadModel extends UserModel {
+    id: number
     isInactive: boolean
     inactiveTill?: string
     requirePasswordReset: boolean
