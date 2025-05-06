@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import Loader from '@/components/admin/Loader.vue'
 import { useAuthStore } from '@/stores/auth'
-import type { UserCreateModel, UserReadModel } from '@/types/admin'
+import type { UserCreateErrorModel, UserCreateModel, UserReadModel } from '@/types/admin'
 import type { HttpResponseModel } from '@/types/common'
 import { HTTP_STATUS } from '@/utils'
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
 
@@ -16,7 +16,10 @@ const router = useRouter()
 const state = reactive<{
     loading: boolean,
     error?: string | null,
-    userModel: UserCreateModel
+    userModel: UserCreateModel,
+    userErrorModel: UserCreateErrorModel,
+    emailValidating: boolean,
+    usernameValidating: boolean
 }>({
     loading: false,
     userModel: {
@@ -26,7 +29,15 @@ const state = reactive<{
         email: '',
         isAdmin: false,
         isArtist: false
-    }
+    },
+    userErrorModel: {
+        firstname: null,
+        lastname: null,
+        email: null,
+        username: null
+    },
+    emailValidating: false,
+    usernameValidating: false
 })
 
 watch(() => state.error, () => {
@@ -79,7 +90,7 @@ const onUserCreateSubmission = async () => {
             }
 
             if (await createUser(state.userModel.firstname, state.userModel.lastname, state.userModel.username, state.userModel.email, state.userModel.isAdmin, state.userModel.isArtist) !== HTTP_STATUS.CREATED) {
-                state.error = "Failed to load User Stats. Please try again."
+                state.error = "Failed to create new user. Please try again."
             }
         }
 
@@ -92,6 +103,82 @@ const onUserCreateSubmission = async () => {
         state.loading = false
     }
 }
+
+const validateFirstname = (e: Event) => {
+    const target = e.target as HTMLInputElement
+    const value = target.value
+    state.userErrorModel.firstname = null
+
+    state.userErrorModel.firstname = value.length <= 0 ? 'Firstname is required.' : null
+    state.userModel.firstname = value
+}
+
+const validateLastname = (e: Event) => {
+    const target = e.target as HTMLInputElement
+    const value = target.value
+    state.userErrorModel.lastname = null
+
+    state.userErrorModel.lastname = value.length <= 0 ? 'Lastname is required.' : null
+    state.userModel.lastname = value
+}
+
+const validateEmail = async (e: Event) => {
+    const target = e.target as HTMLInputElement
+    const value = target.value
+    state.userErrorModel.email = null
+
+    state.emailValidating = true
+    if (!state.userErrorModel.email) {
+        state.userErrorModel.email = value.length <= 0 ? 'Email is required.' : null
+    }
+
+    if (!state.userErrorModel.email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        state.userErrorModel.email = !emailRegex.test(value) ? 'Invalid email format.' : null
+    }
+
+    if (!state.userErrorModel.email) {
+        const response = await fetch(`${baseUrl}/api/admin/user/email-availability?email=${value}`)
+        if (!response.ok) {
+            state.userErrorModel.email = 'Cannot use this email'
+        } else {
+            const payload: boolean = await response.json()
+            state.userErrorModel.email = payload ? null : 'Cannot use this email. It is already in use.'
+        }
+    }
+
+    state.userModel.email = value
+    state.emailValidating = false
+}
+
+const validateUsername = async (e: Event) => {
+    const target = e.target as HTMLInputElement
+    const value = target.value
+    state.userErrorModel.email = null
+
+    state.usernameValidating = true
+    if (!state.userErrorModel.username) {
+        state.userErrorModel.username = value.length <= 0 ? 'Username is required' : null
+    }
+
+    if (!state.userErrorModel.username) {
+        const response = await fetch(`${baseUrl}/api/admin/user/username-availability?username=${value}`)
+        if (!response.ok) {
+            state.userErrorModel.username = 'Cannot use this username'
+        } else {
+            const payload: boolean = await response.json()
+            state.userErrorModel.username = payload ? null : 'Cannot use this username. It is already in use.'
+        }
+    }
+
+    state.userModel.username = value
+    state.usernameValidating = false
+}
+
+const isFirstnameValid = computed(() => !state.userErrorModel.firstname || state.userErrorModel.firstname.length <= 0)
+const isLastnameValid = computed(() => !state.userErrorModel.lastname || state.userErrorModel.lastname.length <= 0)
+const isEmailValid = computed(() => !state.userErrorModel.email || state.userErrorModel.email.length <= 0)
+const isUsernameValid = computed(() => !state.userErrorModel.username || state.userErrorModel.username.length <= 0)
 </script>
 
 <template>
@@ -127,7 +214,12 @@ const onUserCreateSubmission = async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="text" class="form-control" id="firstname" placeholder="John"
-                                            :value="state.userModel.firstname">
+                                            :value="state.userModel.firstname"
+                                            @change="(e: Event) => validateFirstname(e)">
+                                        <div
+                                            :class="`${isFirstnameValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
+                                            {{ isFirstnameValid ? '' : state.userErrorModel.firstname }}
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -136,7 +228,11 @@ const onUserCreateSubmission = async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="text" class="form-control" id="lastname" placeholder="Doe"
-                                            :value="state.userModel.lastname">
+                                            :value="state.userModel.lastname" @change="validateLastname">
+                                        <div
+                                            :class="`${isLastnameValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
+                                            {{ isLastnameValid ? '' : state.userErrorModel.lastname }}
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -144,8 +240,20 @@ const onUserCreateSubmission = async () => {
                                         <label for="email" class="form-label">Email</label>
                                     </div>
                                     <div class="col-9">
-                                        <input type="email" class="form-control" id="email"
-                                            placeholder="johndoe@email.com" :value="state.userModel.email">
+                                        <div class="d-flex align-items-center">
+                                            <input type="email" class="form-control"
+                                                :class="{ 'me-2': state.emailValidating, 'me-0': !state.emailValidating }"
+                                                id="email" placeholder="johndoe@email.com"
+                                                :value="state.userModel.email" @change="validateEmail">
+                                            <div class="spinner-border spinner-border-sm"
+                                                :class="{ 'd-block': state.emailValidating, 'd-none': !state.emailValidating }"
+                                                role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                        <div :class="`${isEmailValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
+                                            {{ isEmailValid ? '' : state.userErrorModel.email }}
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -154,7 +262,11 @@ const onUserCreateSubmission = async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="username" class="form-control" id="username" placeholder="john_doe"
-                                            :value="state.userModel.username">
+                                            :value="state.userModel.username" @change="validateUsername">
+                                        <div
+                                            :class="`${isUsernameValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
+                                            {{ isUsernameValid ? '' : state.userErrorModel.username }}
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row mt-3">

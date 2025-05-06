@@ -168,4 +168,20 @@ public class UserApiController : ControllerBase
         await _userService.DeleteUserAsync(userEntity);
         return NoContent();
     }
+
+    [AllowAnonymous]
+    [HttpGet("email-availability")]
+    public async Task<IActionResult> CheckEmailAvailability([FromQuery] string email, [FromQuery] int? userId = null)
+    {
+        var user = await _userService.GetUserByEmailAsync(email);
+        return Ok(user is null || (userId.HasValue && user.Id == userId));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("username-availability")]
+    public async Task<IActionResult> CheckUsernameAvailability([FromQuery] string username, [FromQuery] int? userId = null)
+    {
+        var user = await _userService.GetUserByEmailAsync(username);
+        return Ok(user is null || (userId.HasValue && user.Id == userId));
+    }
 }

@@ -19,6 +19,13 @@ export interface UserModel {
 
 export interface UserCreateModel extends UserModel { }
 
+export interface UserCreateErrorModel {
+    firstname: string | null
+    lastname: string | null
+    username: string | null
+    email: string | null
+}
+
 export interface UserReadModel extends UserModel {
     id: number
     isInactive: boolean
