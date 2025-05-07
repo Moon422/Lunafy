@@ -20,6 +20,11 @@ const router = createRouter({
       component: () => import('@/views/LoginView.vue')
     },
     {
+      path: '/forbidden',
+      name: 'forbidden',
+      component: () => import('@/views/Forbidden.vue')
+    },
+    {
       path: '/admin',
       name: 'admin',
       component: () => import('@/layouts/AdminLayout.vue'),

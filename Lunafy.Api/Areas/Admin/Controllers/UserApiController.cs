@@ -181,7 +181,7 @@ public class UserApiController : ControllerBase
     [HttpGet("username-availability")]
     public async Task<IActionResult> CheckUsernameAvailability([FromQuery] string username, [FromQuery] int? userId = null)
     {
-        var user = await _userService.GetUserByEmailAsync(username);
+        var user = await _userService.GetUserByUseranmeAsync(username);
         return Ok(user is null || (userId.HasValue && user.Id == userId));
     }
 }

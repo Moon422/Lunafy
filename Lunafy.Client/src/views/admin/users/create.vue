@@ -154,7 +154,7 @@ const validateEmail = async (e: Event) => {
 const validateUsername = async (e: Event) => {
     const target = e.target as HTMLInputElement
     const value = target.value
-    state.userErrorModel.email = null
+    state.userErrorModel.username = null
 
     state.usernameValidating = true
     if (!state.userErrorModel.username) {
@@ -186,7 +186,7 @@ const isUsernameValid = computed(() => !state.userErrorModel.username || state.u
         <!-- Header -->
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
-                <h3>Edit User - John Doe</h3>
+                <h3>Create New User</h3>
                 <div class="d-flex">
                     <button type="submit" class="btn btn-success me-2">
                         <i class="bi bi-floppy-fill"></i>
@@ -261,8 +261,17 @@ const isUsernameValid = computed(() => !state.userErrorModel.username || state.u
                                         <label for="username" class="form-label">Username</label>
                                     </div>
                                     <div class="col-9">
-                                        <input type="username" class="form-control" id="username" placeholder="john_doe"
-                                            :value="state.userModel.username" @change="validateUsername">
+                                        <div class="d-flex align-items-center">
+                                            <input type="username" class="form-control"
+                                                :class="{ 'me-2': state.usernameValidating, 'me-0': !state.usernameValidating }"
+                                                id="username" placeholder="john_doe" :value="state.userModel.username"
+                                                @change="validateUsername">
+                                            <div class="spinner-border spinner-border-sm"
+                                                :class="{ 'd-block': state.usernameValidating, 'd-none': !state.usernameValidating }"
+                                                role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
                                         <div
                                             :class="`${isUsernameValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
                                             {{ isUsernameValid ? '' : state.userErrorModel.username }}

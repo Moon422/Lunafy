@@ -81,11 +81,15 @@ const deleteUser = async () => {
     }
 
     const { errors }: HttpResponseModel<UserReadModel> = await response.json()
-    if (!response.ok) {
-        const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
-        state.error = errorMsg
-        return response.status
+    if (response.status === HTTP_STATUS.FORBIDDEN) {
+        router.push('/forbidden')
     }
+
+    // if (!response.ok) {
+    //     const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
+    //     state.error = errorMsg
+    //     return response.status
+    // }
 
     return response.status
 }
@@ -234,7 +238,7 @@ onMounted(async () => {
         <!-- Header -->
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
-                <h3>Edit User - John Doe</h3>
+                <h3>Edit User - {{ state.userModel?.firstname }} {{ state.userModel?.lastname }}</h3>
                 <div class="d-flex">
                     <button type="submit" class="btn btn-success me-2">
                         <i class="bi bi-floppy-fill"></i>
@@ -367,17 +371,11 @@ onMounted(async () => {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn btn-danger" @click="onDeleteConfirmation">Delete</button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- <div v-if="state.loading"
-        style="background: rgba(0.35,0.35,0.35,0.60); display: flex; justify-content: center; align-items: center; position: absolute; top: 0; right: 0; left: 0; bottom: 0; z-index: 999999;">
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div> -->
 
     <Loader :loading="state.loading" />
 </template>
