@@ -19,6 +19,10 @@ export interface UserModel {
 
 export interface UserCreateModel extends UserModel { }
 
+export interface UserEditModel extends UserModel {
+    id: number
+}
+
 export interface UserCreateErrorModel {
     firstname: string | null
     lastname: string | null

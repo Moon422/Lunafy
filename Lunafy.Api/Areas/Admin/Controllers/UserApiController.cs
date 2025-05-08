@@ -91,16 +91,25 @@ public class UserApiController : ControllerBase
         {
             return Forbid();
         }
+        var response = new HttpResponseModel<UserReadModel>();
+        if (await _userService.GetUserByEmailAsync(model.Email) is not null)
+        {
+            response.Errors.Add("User with same email already exists.");
+            return BadRequest(response);
+        }
+
+        if (await _userService.GetUserByUseranmeAsync(model.Username) is not null)
+        {
+            response.Errors.Add("User with same username already exists.");
+            return BadRequest(response);
+        }
 
         var userEntity = _mapper.Map<User>(model);
         userEntity.RequirePasswordReset = true;
         await _userService.CreateUserAsync(userEntity);
 
         var userModel = await _userModelsFactory.PrepareUserReadModelAsync(_mapper.Map<UserReadModel>(userEntity), userEntity);
-        var response = new HttpResponseModel<UserReadModel>
-        {
-            Data = userModel
-        };
+        response.Data = userModel;
 
         return CreatedAtAction(nameof(Get), new { id = userEntity.Id }, response);
     }
@@ -114,14 +123,31 @@ public class UserApiController : ControllerBase
             return Forbid();
         }
 
-        var userEntity = _mapper.Map<User>(model);
+        var response = new HttpResponseModel<UserReadModel>();
+        if (model.Id <= 0)
+        {
+            response.Errors.Add("User Id is required.");
+            return BadRequest(response);
+        }
+
+        User? userEntity;
+        if ((userEntity = await _userService.GetUserByEmailAsync(model.Email)) is not null && userEntity.Id != model.Id)
+        {
+            response.Errors.Add("User with same email already exists.");
+            return BadRequest(response);
+        }
+
+        if ((userEntity = await _userService.GetUserByEmailAsync(model.Username)) is not null && userEntity.Id != model.Id)
+        {
+            response.Errors.Add("User with same username already exists.");
+            return BadRequest(response);
+        }
+
+        userEntity = _mapper.Map<User>(model);
         await _userService.UpdateUserAsync(userEntity);
 
         var userModel = await _userModelsFactory.PrepareUserReadModelAsync(_mapper.Map<UserReadModel>(userEntity), userEntity);
-        var response = new HttpResponseModel<UserReadModel>
-        {
-            Data = userModel
-        };
+        response.Data = userModel;
 
         return Ok(response);
     }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Loader from '@/components/admin/Loader.vue'
 import { useAuthStore } from '@/stores/auth'
-import type { UserCreateErrorModel, UserReadModel } from '@/types/admin'
+import type { UserCreateErrorModel, UserCreateModel, UserEditModel, UserReadModel } from '@/types/admin'
 import type { HttpResponseModel } from '@/types/common'
 import type { LoginResponseModel } from '@/types/user'
 import { HTTP_STATUS } from '@/utils'
@@ -66,6 +66,72 @@ const fetchUser = async () => {
     return response.status
 }
 
+const editUser = async (payload: UserCreateModel) => {
+    const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
+    if (authStore.token) {
+        headers.append('Authorization', `Bearer ${authStore.token}`)
+    }
+
+    const response = await fetch(`${baseUrl}/api/admin/user`, {
+        method: 'PUT', headers, credentials: 'include', body: JSON.stringify(payload)
+    })
+
+    if (response.status === HTTP_STATUS.UNAUTHORIZED) {
+        return response.status
+    }
+
+    if (response.status === HTTP_STATUS.BAD_REQUEST) {
+        const { errors }: HttpResponseModel<null> = await response.json()
+        const errorMsg = errors && errors.find(el => el.length > 0) || "Something went wrong. Please try again."
+        state.error = errorMsg
+        return response.status
+    }
+
+    return response.status
+}
+
+const submitUserEdit = async (e: Event) => {
+    if (!isFirstnameValid || !isLastnameValid || !isUsernameValid || !isEmailValid) {
+        state.error = "Some input fields are invalid. Please enter valid inputs."
+        return false
+    }
+
+    const requestPayload: UserEditModel = {
+        id: typeof userId === 'string' ? Number.isNaN(userId) ? 0 : parseInt(userId) : Number.isNaN(userId[0]) ? 0 : parseInt(userId[0]),
+        firstname: state.userModel?.firstname || '',
+        lastname: state.userModel?.lastname || '',
+        username: state.userModel?.username || '',
+        email: state.userModel?.email || '',
+        isAdmin: state.userModel?.isAdmin || false,
+        isArtist: state.userModel?.isArtist || false
+    }
+
+    state.loading = true
+
+    try {
+        if (await editUser(requestPayload) === HTTP_STATUS.UNAUTHORIZED) {
+            const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
+                credentials: 'include'
+            })
+
+            if (!response.ok) {
+                router.push('/login')
+            }
+
+            if (await editUser(requestPayload) !== HTTP_STATUS.NO_CONTENT) {
+                state.error = "Failed to update user. Please try again."
+            }
+        }
+
+        // router.push('/admin/users')
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        state.error = errorMessage
+    } finally {
+        state.loading = false
+    }
+}
+
 const deleteUser = async () => {
     const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
     if (authStore.token) {
@@ -80,16 +146,16 @@ const deleteUser = async () => {
         return response.status
     }
 
-    const { errors }: HttpResponseModel<UserReadModel> = await response.json()
     if (response.status === HTTP_STATUS.FORBIDDEN) {
         router.push('/forbidden')
     }
 
-    // if (!response.ok) {
-    //     const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
-    //     state.error = errorMsg
-    //     return response.status
-    // }
+    if (response.status === HTTP_STATUS.BAD_REQUEST) {
+        const { errors }: HttpResponseModel<null> = await response.json()
+        const errorMsg = errors && errors.find(el => el.length > 0) || "Something went wrong. Please try again."
+        state.error = errorMsg
+        return response.status
+    }
 
     return response.status
 }
@@ -101,7 +167,6 @@ const onDeleteConfirmation = async () => {
             const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
                 credentials: 'include'
             })
-            const { data, errors }: HttpResponseModel<LoginResponseModel> = await response.json()
 
             if (!response.ok) {
                 router.push('/login')
@@ -114,7 +179,6 @@ const onDeleteConfirmation = async () => {
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err)
         state.error = errorMessage
-        throw err
     } finally {
         state.loading = false
     }
@@ -196,10 +260,6 @@ const isLastnameValid = computed(() => !state.userErrorModel.lastname || state.u
 const isEmailValid = computed(() => !state.userErrorModel.email || state.userErrorModel.email.length <= 0)
 const isUsernameValid = computed(() => !state.userErrorModel.username || state.userErrorModel.username.length <= 0)
 
-const submitEditRequest = async () => {
-
-}
-
 watch(() => state.error, () => {
     if (state.error && state.error.length > 0) {
         toast.error(state.error, { onClose: () => state.error = null })
@@ -226,7 +286,6 @@ onMounted(async () => {
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err)
         state.error = errorMessage
-        throw err
     } finally {
         state.loading = false
     }
@@ -234,7 +293,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <form @submit.prevent="console.log('form submitted...')">
+    <form @submit.prevent="submitUserEdit">
         <!-- Header -->
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
