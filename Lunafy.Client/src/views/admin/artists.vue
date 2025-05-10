@@ -1,3 +1,27 @@
+<script setup lang="ts">
+import { useAuthStore } from '@/stores/auth'
+import type { ArtistReadModel } from '@/types/admin'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import Pagination from '@/components/admin/Pagination.vue'
+
+
+const baseUrl = import.meta.env.VITE_API_URL
+
+const authStore = useAuthStore()
+const router = useRouter()
+
+const loading = ref<boolean>(false)
+const error = ref<string | null>(null)
+
+const page = ref<number>(1)
+const totalPages = ref<number>(0)
+const pageSize = ref<number>(5)
+
+const artists = ref<ArtistReadModel[] | null>()
+const artistIdToDelete = ref<number>(0)
+</script>
+
 <template>
     <!-- Header -->
     <div class="container">
@@ -16,54 +40,53 @@
             <thead>
                 <tr>
                     <th scope="col">#</th>
-                    <th scope="col">Cover</th>
+                    <th scope="col">Image</th>
                     <th scope="col">Name</th>
-                    <th scope="col">Genres</th>
-                    <th scope="col">Is Verified</th>
-                    <th scope="col">Rating</th>
+                    <!-- <th scope="col">Genres</th> -->
+                    <!-- <th scope="col">Is Verified</th> -->
+                    <!-- <th scope="col">Rating</th> -->
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <template v-if="!users || !users.length">
+                <template v-if="!artists || !artists.length">
                     <tr>
-                        <td colspan="6" class="text-center">
+                        <td colspan="7" class="text-center">
                             No data
                         </td>
                     </tr>
                 </template>
                 <template v-else>
-                    <tr v-for="user in users" :key="user.id">
-                        <th scope="row">{{ user.id }}</th>
+                    <tr v-for="artist in artists" :key="artist.id">
+                        <th scope="row">{{ artist.id }}</th>
                         <th scope="row">
-                            <h6>{{ user.firstname }} {{ user.lastname }}</h6>
-                            <p class="mb-0" style="font-size: smaller;">@{{ user.username }}</p>
+                            <img :src="`${baseUrl}/images/artists/profile/${artist.id}/64.webp`"
+                                alt="Artist profile picture" width="64" height="64">
                         </th>
-                        <th scope="row">{{ user.email }}</th>
-                        <th scope="row">
-                            <i class="bi bi-check-lg" v-if="user.isAdmin"></i>
+                        <th scope="row">{{ artist.firstname }} {{ artist.lastname }}</th>
+                        <!-- <th scope="row">
+                            Genres
+                        </th> -->
+                        <!-- <th scope="row">
+                            <i class="bi bi-check-lg" v-if="artist.isArtist"></i>
                             <i class="bi bi-x-lg" v-else></i>
-                        </th>
-                        <th scope="row">
+                        </th> -->
+                        <!-- <th scope="row">
                             <i class="bi bi-check-lg" v-if="user.isArtist"></i>
                             <i class="bi bi-x-lg" v-else></i>
-                        </th>
-                        <th scope="row">
-                            <i class="bi bi-check-lg" v-if="user.isArtist"></i>
-                            <i class="bi bi-x-lg" v-else></i>
-                        </th>
+                        </th> -->
                         <th scope="row">
                             <div class="container">
                                 <div class="row">
                                     <div class="col">
-                                        <RouterLink :to="`/admin/users/${user.id}`" class="btn btn-primary w-100">
+                                        <RouterLink :to="`/admin/artists/${artist.id}`" class="btn btn-primary w-100">
                                             <i class="bi bi-pencil-square"></i>
                                         </RouterLink>
                                     </div>
                                     <div class="col">
                                         <button class="btn btn-danger w-100" data-bs-toggle="modal"
                                             data-bs-target="#deleteConfirmation"
-                                            @click.prevent="() => userIdToDelete = user.id">
+                                            @click.prevent="() => artistIdToDelete = artist.id">
                                             <i class="bi bi-trash3-fill"></i>
                                         </button>
                                     </div>

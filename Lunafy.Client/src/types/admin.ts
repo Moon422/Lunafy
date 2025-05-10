@@ -42,3 +42,20 @@ export interface UserReadModel extends UserModel {
     deletedOn?: string
     isEditable: boolean
 }
+
+export interface ArtistModel {
+    firstname: string
+    lastname: string
+    biography: string | null
+    musicBrainzId: string | null
+}
+
+export interface ArtistCreateModel extends ArtistModel { }
+
+export interface ArtistReadModel extends ArtistModel {
+    id: number
+    createdOn: string
+    modifiedOn: string | null
+    deleted: boolean
+    deletedOn: string | null
+}
