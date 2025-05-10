@@ -91,7 +91,12 @@ onMounted(async () => {
 
 <template>
     <div class="card h-100">
-        <div class="card-body d-flex">
+        <div class="card-body d-flex justify-content-center align-items-center" v-if="loading">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div class="card-body d-flex" v-else>
             <div class="me-3" style="width: 4rem;">
                 <img src="/image.png" alt="profile picture" width="50" class="w-100">
             </div>

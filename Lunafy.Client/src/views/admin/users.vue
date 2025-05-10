@@ -22,6 +22,7 @@ const totalPages = ref<number>(0)
 const pageSize = ref<number>(5)
 
 const users = ref<UserReadModel[] | null>()
+const userIdToDelete = ref<number>(0)
 
 const fetchUsers = async (page: number, pageSize: number) => {
     const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
@@ -59,6 +60,64 @@ const fetchUsers = async (page: number, pageSize: number) => {
     users.value = data.data
 
     return response.status
+}
+
+const deleteUser = async () => {
+    const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
+    if (authStore.token) {
+        headers.append('Authorization', `Bearer ${authStore.token}`)
+    }
+
+    const response = await fetch(`${baseUrl}/api/admin/user/${userIdToDelete.value}`, {
+        method: 'DELETE', headers, credentials: 'include'
+    })
+
+    if (response.status === HTTP_STATUS.UNAUTHORIZED) {
+        return response.status
+    }
+
+    if (response.status === HTTP_STATUS.FORBIDDEN) {
+        router.push('/forbidden')
+    }
+
+    if (response.status === HTTP_STATUS.BAD_REQUEST) {
+        const { errors }: HttpResponseModel<null> = await response.json()
+        const errorMsg = errors && errors.find(el => el.length > 0) || "Something went wrong. Please try again."
+        error.value = errorMsg
+        return response.status
+    }
+
+    return response.status
+}
+
+const onDeleteConfirmation = async () => {
+    if (userIdToDelete.value <= 0) {
+        return false
+    }
+
+    loading.value = true
+    try {
+        if (await deleteUser() === HTTP_STATUS.UNAUTHORIZED) {
+            const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
+                credentials: 'include'
+            })
+
+            if (!response.ok) {
+                router.push('/login')
+            }
+
+            if (await deleteUser() !== HTTP_STATUS.NO_CONTENT) {
+                error.value = "Failed to delete user. Please try again."
+            }
+        }
+
+        await fetchUsers(page.value, pageSize.value)
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        error.value = errorMessage
+    } finally {
+        loading.value = false
+    }
 }
 
 watch([page, pageSize], async () => {
@@ -146,7 +205,9 @@ watch([page, pageSize], async () => {
                                         </RouterLink>
                                     </div>
                                     <div class="col">
-                                        <button class="btn btn-danger w-100">
+                                        <button class="btn btn-danger w-100" data-bs-toggle="modal"
+                                            data-bs-target="#deleteConfirmation"
+                                            @click.prevent="() => userIdToDelete = user.id">
                                             <i class="bi bi-trash3-fill"></i>
                                         </button>
                                     </div>
@@ -161,5 +222,26 @@ watch([page, pageSize], async () => {
             @changePageSize="(x) => pageSize = x" @changePage="(x) => page = x" />
     </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="deleteConfirmation" tabindex="-1" aria-labelledby="deleteConfirmationLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deleteConfirmationLabel">Are you sture you want to delete the user?
+                    </h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    The user will be soft deleted.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
+                        @click="onDeleteConfirmation">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <Loader :loading="loading" />
 </template>
