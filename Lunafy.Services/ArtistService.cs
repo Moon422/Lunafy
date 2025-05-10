@@ -63,6 +63,11 @@ public class ArtistService : IArtistService
         return await _artistRepository.GetByIdAsync(id, (cache) => default, includeDeleted: includeDeleted);
     }
 
+    public Task<Artist?> GetArtistByMusicBrainzIdAsync(Guid guid, bool includeDeleted = false)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<IList<Artist>> GetArtistsByIdsAsync(IList<int> ids, bool includeDeleted = false)
     {
         if (ids is null || !ids.Any())

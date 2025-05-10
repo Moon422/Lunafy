@@ -4,6 +4,7 @@ using Lunafy.Api.Areas.Admin.Factories;
 using Lunafy.Api.Areas.Admin.Models.Artists;
 using Lunafy.Api.Models;
 using Lunafy.Core.Infrastructure;
+using Lunafy.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,14 +16,17 @@ namespace Lunafy.Api.Areas.Admin.Controllers;
 [Route("api/[area]/artist")]
 public class ArtistApiController : ControllerBase
 {
+    private readonly IArtistService _artistService;
     private readonly IArtistModelsFactory _artistModelsFactory;
     private readonly IWorkContext _workContext;
 
-    public ArtistApiController(IArtistModelsFactory artistModelsFactory,
+    public ArtistApiController(IArtistService artistService,
+        IArtistModelsFactory artistModelsFactory,
         IWorkContext workContext)
     {
         _workContext = workContext;
         _artistModelsFactory = artistModelsFactory;
+        _artistService = artistService;
     }
 
     [HttpGet]
@@ -44,5 +48,11 @@ public class ArtistApiController : ControllerBase
         };
 
         return Ok(response);
+    }
+
+    [HttpGet('musicbrainz-id-availability')]
+    public async Task<IActionResult> CheckMusicbrainIdAvailability([FromQuery] Guid musicBrainzId, [FromQuery] int? artistId = null)
+    {
+        var artist = await _artistService.GetArtistByIdAsync(artistId)
     }
 }

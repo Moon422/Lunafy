@@ -35,7 +35,7 @@ const artistIdToDelete = ref<number>(0)
     </div>
 
     <!-- User table -->
-    <div class="container  mt-3">
+    <div class="container mt-3">
         <table class="table table-striped">
             <thead>
                 <tr>

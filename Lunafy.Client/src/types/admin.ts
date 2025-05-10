@@ -59,3 +59,9 @@ export interface ArtistReadModel extends ArtistModel {
     deleted: boolean
     deletedOn: string | null
 }
+
+export interface ArtistCreateErrorModel {
+    firstname: string | null
+    lastname: string | null
+    musicBrainzId: string | null
+}
