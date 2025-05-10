@@ -196,7 +196,7 @@ watch([page, pageSize], async () => {
                             <i class="bi bi-check-lg" v-if="user.isArtist"></i>
                             <i class="bi bi-x-lg" v-else></i>
                         </th>
-                        <th scope="row">
+                        <th scope="row" style="width: 16rem;">
                             <div class="container">
                                 <div class="row">
                                     <div class="col">

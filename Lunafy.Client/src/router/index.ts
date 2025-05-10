@@ -71,8 +71,23 @@ const router = createRouter({
         },
         {
           path: 'artists',
-          name: 'admin-artists',
-          component: () => import('@/views/admin/artists.vue')
+          children: [
+            {
+              path: '',
+              name: 'admin-artists',
+              component: () => import('@/views/admin/artists.vue')
+            },
+            {
+              path: ':id',
+              name: 'admin-artist-edit',
+              component: () => import('@/views/admin/artists/edit.vue')
+            },
+            {
+              path: 'create',
+              name: 'admin-artist-create',
+              component: () => import('@/views/admin/artists/create.vue')
+            }
+          ]
         },
         {
           path: 'playlists',

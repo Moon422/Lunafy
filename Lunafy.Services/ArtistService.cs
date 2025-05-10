@@ -63,9 +63,15 @@ public class ArtistService : IArtistService
         return await _artistRepository.GetByIdAsync(id, (cache) => default, includeDeleted: includeDeleted);
     }
 
-    public Task<Artist?> GetArtistByMusicBrainzIdAsync(Guid guid, bool includeDeleted = false)
+    public async Task<Artist?> GetArtistByMusicBrainzIdAsync(Guid guid, bool includeDeleted = false)
     {
-        throw new NotImplementedException();
+        var cacheKey = _cacheManager.PrepareCacheKey(ArtistCacheDefaults.ArtistByMusicBrainzIdCacheKey, guid);
+        return await _cacheManager.GetAsync(cacheKey, async () =>
+        {
+            return await _artistRepository.Table
+            .Where(x => x.MusicBrainzId == guid)
+            .FirstOrDefaultAsync();
+        });
     }
 
     public async Task<IList<Artist>> GetArtistsByIdsAsync(IList<int> ids, bool includeDeleted = false)

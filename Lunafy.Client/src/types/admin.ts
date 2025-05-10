@@ -52,6 +52,10 @@ export interface ArtistModel {
 
 export interface ArtistCreateModel extends ArtistModel { }
 
+export interface ArtistEditModel extends ArtistModel {
+    id: number
+}
+
 export interface ArtistReadModel extends ArtistModel {
     id: number
     createdOn: string

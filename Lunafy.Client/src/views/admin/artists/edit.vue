@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Loader from '@/components/admin/Loader.vue'
 import { useAuthStore } from '@/stores/auth'
-import type { UserCreateErrorModel, UserCreateModel, UserEditModel, UserReadModel } from '@/types/admin'
+import type { ArtistCreateErrorModel, ArtistCreateModel, ArtistEditModel, ArtistReadModel } from '@/types/admin'
 import type { HttpResponseModel } from '@/types/common'
 import type { LoginResponseModel } from '@/types/user'
 import { HTTP_STATUS } from '@/utils'
@@ -14,34 +14,37 @@ const baseUrl = import.meta.env.VITE_API_URL
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
-const userId = route.params.id
+const artistId = route.params.id
 
 const state = reactive<{
     loading: boolean,
     error?: string | null,
-    userModel?: UserReadModel | null,
-    userErrorModel: UserCreateErrorModel,
-    emailValidating: boolean,
-    usernameValidating: boolean
+    artistModel: ArtistCreateModel,
+    artistErrorModel: ArtistCreateErrorModel,
+    musicBrainzIdValidating: boolean
 }>({
     loading: false,
-    userErrorModel: {
+    artistModel: {
+        firstname: '',
+        lastname: '',
+        biography: null,
+        musicBrainzId: null,
+    },
+    artistErrorModel: {
         firstname: null,
         lastname: null,
-        email: null,
-        username: null
+        musicBrainzId: null,
     },
-    emailValidating: false,
-    usernameValidating: false
+    musicBrainzIdValidating: false,
 })
 
-const fetchUser = async () => {
+const fetchArtist = async () => {
     const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
     if (authStore.token) {
         headers.append('Authorization', `Bearer ${authStore.token}`)
     }
 
-    const response = await fetch(`${baseUrl}/api/admin/user/${userId}`, {
+    const response = await fetch(`${baseUrl}/api/admin/artist/${artistId}`, {
         method: 'GET', headers, credentials: 'include'
     })
 
@@ -49,7 +52,7 @@ const fetchUser = async () => {
         return response.status
     }
 
-    const { data, errors }: HttpResponseModel<UserReadModel> = await response.json()
+    const { data, errors }: HttpResponseModel<ArtistReadModel> = await response.json()
     if (!response.ok) {
         const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
         state.error = errorMsg
@@ -62,11 +65,11 @@ const fetchUser = async () => {
         return response.status
     }
 
-    state.userModel = data
+    state.artistModel = data
     return response.status
 }
 
-const editUser = async (payload: UserCreateModel) => {
+const editArtist = async (payload: ArtistEditModel) => {
     const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
     if (authStore.token) {
         headers.append('Authorization', `Bearer ${authStore.token}`)
@@ -90,26 +93,24 @@ const editUser = async (payload: UserCreateModel) => {
     return response.status
 }
 
-const submitUserEdit = async (e: Event) => {
-    if (!isFirstnameValid || !isLastnameValid || !isUsernameValid || !isEmailValid) {
+const submitArtistEdit = async (e: Event) => {
+    if (!isFirstnameValid || !isLastnameValid || !isMusicBrainzIdValid) {
         state.error = "Some input fields are invalid. Please enter valid inputs."
         return false
     }
 
-    const requestPayload: UserEditModel = {
-        id: typeof userId === 'string' ? Number.isNaN(userId) ? 0 : parseInt(userId) : Number.isNaN(userId[0]) ? 0 : parseInt(userId[0]),
-        firstname: state.userModel?.firstname || '',
-        lastname: state.userModel?.lastname || '',
-        username: state.userModel?.username || '',
-        email: state.userModel?.email || '',
-        isAdmin: state.userModel?.isAdmin || false,
-        isArtist: state.userModel?.isArtist || false
+    const requestPayload: ArtistEditModel = {
+        id: typeof artistId === 'string' ? Number.isNaN(artistId) ? 0 : parseInt(artistId) : Number.isNaN(artistId[0]) ? 0 : parseInt(artistId[0]),
+        firstname: state.artistModel?.firstname || '',
+        lastname: state.artistModel?.lastname || '',
+        biography: state.artistModel?.biography || null,
+        musicBrainzId: state.artistModel?.musicBrainzId || null
     }
 
     state.loading = true
 
     try {
-        if (await editUser(requestPayload) === HTTP_STATUS.UNAUTHORIZED) {
+        if (await editArtist(requestPayload) === HTTP_STATUS.UNAUTHORIZED) {
             const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
                 credentials: 'include'
             })
@@ -118,12 +119,12 @@ const submitUserEdit = async (e: Event) => {
                 router.push('/login')
             }
 
-            if (await editUser(requestPayload) !== HTTP_STATUS.NO_CONTENT) {
+            if (await editArtist(requestPayload) !== HTTP_STATUS.NO_CONTENT) {
                 state.error = "Failed to update user. Please try again."
             }
         }
 
-        // router.push('/admin/users')
+        router.push('/admin/artists')
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err)
         state.error = errorMessage
@@ -132,13 +133,13 @@ const submitUserEdit = async (e: Event) => {
     }
 }
 
-const deleteUser = async () => {
+const deleteArtist = async () => {
     const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
     if (authStore.token) {
         headers.append('Authorization', `Bearer ${authStore.token}`)
     }
 
-    const response = await fetch(`${baseUrl}/api/admin/user/${userId}`, {
+    const response = await fetch(`${baseUrl}/api/admin/artist/${artistId}`, {
         method: 'DELETE', headers, credentials: 'include'
     })
 
@@ -163,7 +164,7 @@ const deleteUser = async () => {
 const onDeleteConfirmation = async () => {
     state.loading = true
     try {
-        if (await deleteUser() === HTTP_STATUS.UNAUTHORIZED) {
+        if (await deleteArtist() === HTTP_STATUS.UNAUTHORIZED) {
             const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
                 credentials: 'include'
             })
@@ -172,7 +173,7 @@ const onDeleteConfirmation = async () => {
                 router.push('/login')
             }
 
-            if (await deleteUser() !== HTTP_STATUS.NO_CONTENT) {
+            if (await deleteArtist() !== HTTP_STATUS.NO_CONTENT) {
                 state.error = "Failed to delete user. Please try again."
             }
         }
@@ -187,78 +188,51 @@ const onDeleteConfirmation = async () => {
 const validateFirstname = (e: Event) => {
     const target = e.target as HTMLInputElement
     const value = target.value
-    state.userErrorModel.firstname = null
+    state.artistErrorModel.firstname = null
 
-    state.userErrorModel.firstname = value.length <= 0 ? 'Firstname is required.' : null
-    if (state.userModel) state.userModel.firstname = value
+    state.artistErrorModel.firstname = value.length <= 0 ? 'Firstname is required.' : null
+    state.artistModel.firstname = value
 }
 
 const validateLastname = (e: Event) => {
     const target = e.target as HTMLInputElement
     const value = target.value
-    state.userErrorModel.lastname = null
+    state.artistErrorModel.lastname = null
 
-    state.userErrorModel.lastname = value.length <= 0 ? 'Lastname is required.' : null
-    if (state.userModel) state.userModel.lastname = value
+    state.artistErrorModel.lastname = value.length <= 0 ? 'Lastname is required.' : null
+    state.artistModel.lastname = value
 }
 
-const validateEmail = async (e: Event) => {
+const validateMusicBrainz = async (e: Event) => {
     const target = e.target as HTMLInputElement
     const value = target.value
-    state.userErrorModel.email = null
+    state.artistErrorModel.musicBrainzId = null
 
-    state.emailValidating = true
-    if (!state.userErrorModel.email) {
-        state.userErrorModel.email = value.length <= 0 ? 'Email is required.' : null
+    if (value.length <= 0) {
+        return
     }
 
-    if (!state.userErrorModel.email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        state.userErrorModel.email = !emailRegex.test(value) ? 'Invalid email format.' : null
-    }
+    state.musicBrainzIdValidating = true
 
-    if (!state.userErrorModel.email) {
-        const response = await fetch(`${baseUrl}/api/admin/user/email-availability?email=${value}&userId=${state.userModel?.id}`)
+    if (!state.artistErrorModel.musicBrainzId) {
+        const response = await fetch(`${baseUrl}/api/admin/artist/musicbrainz-id-availability?musicBrainzId=${value}`, {
+            credentials: 'include'
+        })
         if (!response.ok) {
-            state.userErrorModel.email = 'Cannot use this email'
+            state.artistErrorModel.musicBrainzId = 'Cannot use this music brainz id'
         } else {
             const payload: boolean = await response.json()
-            state.userErrorModel.email = payload ? null : 'Cannot use this email. It is already in use.'
+            state.artistErrorModel.musicBrainzId = payload ? null : 'Cannot use this music brainz id. It is already in use.'
         }
     }
 
-    if (state.userModel) state.userModel.email = value
-    state.emailValidating = false
+    state.artistModel.musicBrainzId = value
+    state.musicBrainzIdValidating = false
 }
 
-const validateUsername = async (e: Event) => {
-    const target = e.target as HTMLInputElement
-    const value = target.value
-    state.userErrorModel.email = null
-
-    state.usernameValidating = true
-    if (!state.userErrorModel.username) {
-        state.userErrorModel.username = value.length <= 0 ? 'Username is required' : null
-    }
-
-    if (!state.userErrorModel.username) {
-        const response = await fetch(`${baseUrl}/api/admin/user/username-availability?username=${value}&userId=${state.userModel?.id}`)
-        if (!response.ok) {
-            state.userErrorModel.username = 'Cannot use this username'
-        } else {
-            const payload: boolean = await response.json()
-            state.userErrorModel.username = payload ? null : 'Cannot use this username. It is already in use.'
-        }
-    }
-
-    if (state.userModel) state.userModel.username = value
-    state.usernameValidating = false
-}
-
-const isFirstnameValid = computed(() => !state.userErrorModel.firstname || state.userErrorModel.firstname.length <= 0)
-const isLastnameValid = computed(() => !state.userErrorModel.lastname || state.userErrorModel.lastname.length <= 0)
-const isEmailValid = computed(() => !state.userErrorModel.email || state.userErrorModel.email.length <= 0)
-const isUsernameValid = computed(() => !state.userErrorModel.username || state.userErrorModel.username.length <= 0)
+const isFirstnameValid = computed(() => !state.artistErrorModel.firstname || state.artistErrorModel.firstname.length <= 0)
+const isLastnameValid = computed(() => !state.artistErrorModel.lastname || state.artistErrorModel.lastname.length <= 0)
+const isMusicBrainzIdValid = computed(() => !state.artistErrorModel.musicBrainzId || state.artistErrorModel.musicBrainzId.length <= 0)
 
 watch(() => state.error, () => {
     if (state.error && state.error.length > 0) {
@@ -269,7 +243,7 @@ watch(() => state.error, () => {
 onMounted(async () => {
     state.loading = true
     try {
-        if (await fetchUser() === HTTP_STATUS.UNAUTHORIZED) {
+        if (await fetchArtist() === HTTP_STATUS.UNAUTHORIZED) {
             const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
                 credentials: 'include'
             })
@@ -279,7 +253,7 @@ onMounted(async () => {
                 router.push('/login')
             }
 
-            if (await fetchUser() !== HTTP_STATUS.OK) {
+            if (await fetchArtist() !== HTTP_STATUS.OK) {
                 state.error = "Failed to load user data. Please try again."
             }
         }
@@ -293,11 +267,11 @@ onMounted(async () => {
 </script>
 
 <template>
-    <form @submit.prevent="submitUserEdit">
+    <form @submit.prevent="submitArtistEdit">
         <!-- Header -->
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
-                <h3>Edit User - {{ state.userModel?.firstname }} {{ state.userModel?.lastname }}</h3>
+                <h3>Edit User - {{ state.artistModel?.firstname }} {{ state.artistModel?.lastname }}</h3>
                 <div class="d-flex">
                     <button type="submit" class="btn btn-success me-2">
                         <i class="bi bi-floppy-fill"></i>
@@ -323,18 +297,18 @@ onMounted(async () => {
                     </h2>
                     <div id="panel-info" class="accordion-collapse collapse show">
                         <div class="accordion-body">
-                            <div class="container" v-if="state.userModel">
+                            <div class="container">
                                 <div class="row">
                                     <div class="col-3">
                                         <label for="firstname" class="form-label">First Name</label>
                                     </div>
                                     <div class="col-9">
                                         <input type="text" class="form-control" id="firstname" placeholder="John"
-                                            :value="state.userModel.firstname"
+                                            :value="state.artistModel.firstname"
                                             @change="(e: Event) => validateFirstname(e)">
                                         <div
                                             :class="`${isFirstnameValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
-                                            {{ isFirstnameValid ? '' : state.userErrorModel.firstname }}
+                                            {{ isFirstnameValid ? '' : state.artistErrorModel.firstname }}
                                         </div>
                                     </div>
                                 </div>
@@ -344,67 +318,42 @@ onMounted(async () => {
                                     </div>
                                     <div class="col-9">
                                         <input type="text" class="form-control" id="lastname" placeholder="Doe"
-                                            :value="state.userModel.lastname" @change="validateLastname">
+                                            :value="state.artistModel.lastname" @change="validateLastname">
                                         <div
                                             :class="`${isLastnameValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
-                                            {{ isLastnameValid ? '' : state.userErrorModel.lastname }}
+                                            {{ isLastnameValid ? '' : state.artistErrorModel.lastname }}
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row mt-3">
                                     <div class="col-3">
-                                        <label for="email" class="form-label">Email</label>
+                                        <label for="biography" class="form-label">Biography</label>
+                                    </div>
+                                    <div class="col-9">
+                                        <input type="email" class="form-control" id="email" placeholder="Biography"
+                                            v-model="state.artistModel.biography">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-3">
+                                        <label for="musicBrainzId" class="form-label">Music Brainz Id</label>
                                     </div>
                                     <div class="col-9">
                                         <div class="d-flex align-items-center">
-                                            <input type="email" class="form-control"
-                                                :class="{ 'me-2': state.emailValidating, 'me-0': !state.emailValidating }"
-                                                id="email" placeholder="johndoe@email.com"
-                                                :value="state.userModel.email" @change="validateEmail">
+                                            <input type="musicBrainzId" class="form-control"
+                                                :class="{ 'me-2': state.musicBrainzIdValidating, 'me-0': !state.musicBrainzIdValidating }"
+                                                id="musicBrainzId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxx"
+                                                :value="state.artistModel.musicBrainzId" @change="validateMusicBrainz">
                                             <div class="spinner-border spinner-border-sm"
-                                                :class="{ 'd-block': state.emailValidating, 'd-none': !state.emailValidating }"
+                                                :class="{ 'd-block': state.musicBrainzIdValidating, 'd-none': !state.musicBrainzIdValidating }"
                                                 role="status">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
                                         </div>
-                                        <div :class="`${isEmailValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
-                                            {{ isEmailValid ? '' : state.userErrorModel.email }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-3">
-                                        <label for="username" class="form-label">Username</label>
-                                    </div>
-                                    <div class="col-9">
-                                        <input type="username" class="form-control" id="username" placeholder="john_doe"
-                                            :value="state.userModel.username" @change="validateUsername">
                                         <div
-                                            :class="`${isUsernameValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
-                                            {{ isUsernameValid ? '' : state.userErrorModel.username }}
+                                            :class="`${isMusicBrainzIdValid ? 'valid-feedback' : 'invalid-feedback d-block'}`">
+                                            {{ isMusicBrainzIdValid ? '' : state.artistErrorModel.musicBrainzId }}
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-3">
-                                        <label for="isadmin" class="form-label">Is Admin</label>
-                                    </div>
-                                    <div class="col-9">
-                                        <input type="checkbox" class="form-check-input" id="isadmin"
-                                            :checked="state.userModel.isAdmin" @change="() => {
-                                                if (state.userModel) state.userModel.isAdmin = !state.userModel.isAdmin
-                                            }">
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-3">
-                                        <label for="isartist" class="form-label">Is Artist</label>
-                                    </div>
-                                    <div class="col-9">
-                                        <input type="checkbox" class="form-check-input" id="isartist"
-                                            :checked="state.userModel.isArtist" @change="() => {
-                                                if (state.userModel) state.userModel.isArtist = !state.userModel.isArtist
-                                            }">
                                     </div>
                                 </div>
                             </div>

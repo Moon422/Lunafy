@@ -123,7 +123,7 @@ const submitUserEdit = async (e: Event) => {
             }
         }
 
-        // router.push('/admin/users')
+        router.push('/admin/users')
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err)
         state.error = errorMessage
