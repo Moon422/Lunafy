@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Lunafy.Services;
 
 public record FindArtistsCommand : FindEntitiesCommand

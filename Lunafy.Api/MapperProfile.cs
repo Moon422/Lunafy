@@ -15,6 +15,10 @@ public class MapperProfile : Profile
         CreateMap<Areas.Admin.Models.Users.UserCreateModel, User>();
         CreateMap<Areas.Admin.Models.Users.UserSearchCommand, FindUsersCommand>();
 
+        CreateMap<Artist, Areas.Admin.Models.Artists.ArtistReadModel>();
+        CreateMap<Areas.Admin.Models.Artists.ArtistCreateModel, Artist>();
+        CreateMap<Areas.Admin.Models.Artists.ArtistSearchCommand, FindArtistsCommand>();
+
         // public models
         CreateMap<RegistrationModel, User>();
         CreateMap<User, UserModel>();
