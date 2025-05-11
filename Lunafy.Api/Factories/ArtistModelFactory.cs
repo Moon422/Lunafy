@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AutoMapper;
 using Lunafy.Api.Models;
 using Lunafy.Api.Models.Artist;
 using Lunafy.Core.Domains;
@@ -14,17 +13,14 @@ namespace Lunafy.Api.Factories;
 [ScopeDependency(typeof(IArtistModelFactory))]
 public class ArtistModelFactory : IArtistModelFactory
 {
-    private readonly IMapper _mapper;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IArtistService _artistService;
 
     private readonly int[] IMAGE_DIMENSION = { 64, 128, 256, 512, 1024 };
 
-    public ArtistModelFactory(IMapper mapper,
-        IHttpContextAccessor httpContextAccessor,
+    public ArtistModelFactory(IHttpContextAccessor httpContextAccessor,
         IArtistService artistService)
     {
-        _mapper = mapper;
         _httpContextAccessor = httpContextAccessor;
         _artistService = artistService;
     }
@@ -38,7 +34,7 @@ public class ArtistModelFactory : IArtistModelFactory
         return url;
     }
 
-    public async Task<ArtistReadModel> PrepareArtistReadModelAsync(ArtistReadModel model, Artist artist)
+    public async Task<ArtistModel> PrepareArtistModelAsync(ArtistModel model, Artist artist)
     {
         ArgumentNullException.ThrowIfNull(model, nameof(model));
         ArgumentNullException.ThrowIfNull(artist, nameof(artist));
@@ -51,20 +47,20 @@ public class ArtistModelFactory : IArtistModelFactory
         return model;
     }
 
-    public async Task<SearchResultModel<ArtistReadModel>> PrepareArtistReadSearchResultAsync(ArtistSearchCommand command)
+    public async Task<SearchResultModel<ArtistModel>> PrepareArtistSearchResultAsync(ArtistSearchCommand command)
     {
         ArgumentNullException.ThrowIfNull(command, nameof(command));
 
-        var findArtistCommand = _mapper.Map<FindArtistsCommand>(command);
+        var findArtistCommand = command.ToFindCommand();
         var artistsResult = await _artistService.FindArtistsAsync(findArtistCommand, false);
 
-        var artistModels = new List<ArtistReadModel>();
+        var artistModels = new List<ArtistModel>();
         foreach (var artist in artistsResult)
         {
-            artistModels.Add(await PrepareArtistReadModelAsync(_mapper.Map<ArtistReadModel>(artist), artist));
+            artistModels.Add(await PrepareArtistModelAsync(artist.ToModel(), artist));
         }
 
-        var searchResult = new SearchResultModel<ArtistReadModel>
+        var searchResult = new SearchResultModel<ArtistModel>
         {
             Data = artistModels,
             PageNumber = artistsResult.PageNumber,

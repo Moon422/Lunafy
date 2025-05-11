@@ -62,6 +62,10 @@ export interface ArtistReadModel extends ArtistModel {
     modifiedOn: string | null
     deleted: boolean
     deletedOn: string | null
+    profileImage64: string
+    profileImage128: string
+    profileImage256: string
+    profileImage512: string
 }
 
 export interface ArtistCreateErrorModel {

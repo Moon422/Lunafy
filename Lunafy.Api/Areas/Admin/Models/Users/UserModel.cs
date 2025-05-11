@@ -4,7 +4,7 @@ using Lunafy.Api.Models;
 
 namespace Lunafy.Api.Areas.Admin.Models.Users;
 
-public abstract record UserModel : BaseEntityModel
+public record UserModel : BaseEntityModel
 {
     [Required, MaxLength(128)]
     public string Firstname { get; set; }
@@ -19,13 +19,7 @@ public abstract record UserModel : BaseEntityModel
     public string Email { get; set; }
     public bool IsAdmin { get; set; }
     public bool IsArtist { get; set; }
-}
 
-public record UserCreateModel : UserModel
-{ }
-
-public record UserReadModel : UserModel
-{
     public bool IsInactive { get; set; }
     public DateTime? InactiveTill { get; set; }
     public bool RequirePasswordReset { get; set; }

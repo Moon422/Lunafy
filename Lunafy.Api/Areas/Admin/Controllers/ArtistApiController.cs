@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Lunafy.Api.Areas.Admin.Factories;
 using Lunafy.Api.Areas.Admin.Models.Artists;
 using Lunafy.Api.Models;
@@ -25,19 +24,16 @@ public class ArtistApiController : ControllerBase
     private readonly IArtistService _artistService;
     private readonly IArtistModelsFactory _artistModelsFactory;
     private readonly IWorkContext _workContext;
-    private readonly IMapper _mapper;
 
     public ArtistApiController(IWebHostEnvironment env,
         IArtistService artistService,
         IArtistModelsFactory artistModelsFactory,
-        IWorkContext workContext,
-        IMapper mapper)
+        IWorkContext workContext)
     {
         _env = env;
         _workContext = workContext;
         _artistModelsFactory = artistModelsFactory;
         _artistService = artistService;
-        _mapper = mapper;
     }
 
     [HttpGet]
@@ -52,8 +48,8 @@ public class ArtistApiController : ControllerBase
         Math.Clamp(command.PageNumber, 1, int.MaxValue);
         Math.Clamp(command.PageSize, 1, int.MaxValue);
 
-        var searchResult = await _artistModelsFactory.PrepareArtistReadSearchResultAsync(command);
-        var response = new HttpResponseModel<SearchResultModel<ArtistReadModel>>
+        var searchResult = await _artistModelsFactory.PrepareArtistSearchResultAsync(command);
+        var response = new HttpResponseModel<SearchResultModel<ArtistModel>>
         {
             Data = searchResult
         };
@@ -70,7 +66,7 @@ public class ArtistApiController : ControllerBase
             return Forbid();
         }
 
-        var response = new HttpResponseModel<ArtistReadModel>();
+        var response = new HttpResponseModel<ArtistModel>();
         if (id <= 0)
         {
             response.Errors.Add("Artist Id cannot be less than zero. Provide a valid user Id.");
@@ -84,27 +80,27 @@ public class ArtistApiController : ControllerBase
             return NotFound(response);
         }
 
-        var model = await _artistModelsFactory.PrepareArtistReadModelAsync(_mapper.Map<ArtistReadModel>(artistEntity), artistEntity);
+        var model = await _artistModelsFactory.PrepareArtistModelAsync(artistEntity.ToModel(), artistEntity);
         response.Data = model;
         return Ok(response);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] ArtistCreateModel model)
+    public async Task<IActionResult> Create([FromBody] ArtistModel model)
     {
         var user = await _workContext.GetCurrentUserAsync();
         if (user is null || !user.IsAdmin)
         {
             return Forbid();
         }
-        var response = new HttpResponseModel<ArtistReadModel>();
+        var response = new HttpResponseModel<ArtistModel>();
         if (model.MusicBrainzId.HasValue && await _artistService.GetArtistByMusicBrainzIdAsync(model.MusicBrainzId.Value) is not null)
         {
             response.Errors.Add("Artist with same musicbrainz Id already exists.");
             return BadRequest(response);
         }
 
-        var artistEntity = _mapper.Map<Artist>(model);
+        var artistEntity = model.ToEntity();
         await _artistService.CreateArtistAsync(artistEntity);
 
         var wwwRootImages = Path.Join(_env.WebRootPath, "images");
@@ -116,14 +112,14 @@ public class ArtistApiController : ControllerBase
             System.IO.File.Copy(file, Path.Join(directory.FullName, file.Split('_').Last()));
         }
 
-        var artistModel = await _artistModelsFactory.PrepareArtistReadModelAsync(_mapper.Map<ArtistReadModel>(artistEntity), artistEntity);
+        var artistModel = await _artistModelsFactory.PrepareArtistModelAsync(artistEntity.ToModel(), artistEntity);
         response.Data = artistModel;
 
         return CreatedAtAction(nameof(Get), new { id = artistEntity.Id }, response);
     }
 
     [HttpPut]
-    public async Task<IActionResult> Update([FromBody] ArtistCreateModel model)
+    public async Task<IActionResult> Update([FromBody] ArtistModel model)
     {
         var user = await _workContext.GetCurrentUserAsync();
         if (user is null || !user.IsAdmin)
@@ -131,25 +127,31 @@ public class ArtistApiController : ControllerBase
             return Forbid();
         }
 
-        var response = new HttpResponseModel<ArtistReadModel>();
+        var response = new HttpResponseModel<ArtistModel>();
         if (model.Id <= 0)
         {
             response.Errors.Add("Artist Id is required.");
             return BadRequest(response);
         }
 
-        Artist? artistEntity;
-        if (model.MusicBrainzId.HasValue && (artistEntity = await _artistService.GetArtistByMusicBrainzIdAsync(model.MusicBrainzId.Value)) is not null && artistEntity.Id != model.Id)
+        Artist? entity;
+        if (model.MusicBrainzId.HasValue && (entity = await _artistService.GetArtistByMusicBrainzIdAsync(model.MusicBrainzId.Value)) is not null && entity.Id != model.Id)
         {
             response.Errors.Add("Artist with same musicbrainz Id already exists.");
             return BadRequest(response);
         }
 
-        artistEntity = _mapper.Map<Artist>(model);
-        await _artistService.UpdateArtistAsync(artistEntity);
+        entity = await _artistService.GetArtistByIdAsync(model.Id);
+        if (entity is null)
+        {
+            return BadRequest("Artist not found.");
+        }
 
-        var userModel = await _artistModelsFactory.PrepareArtistReadModelAsync(_mapper.Map<ArtistReadModel>(artistEntity), artistEntity);
-        response.Data = userModel;
+        entity = model.UpdateEntity(entity);
+        await _artistService.UpdateArtistAsync(entity);
+
+        model = await _artistModelsFactory.PrepareArtistModelAsync(entity.ToModel(), entity);
+        response.Data = model;
 
         return Ok(response);
     }

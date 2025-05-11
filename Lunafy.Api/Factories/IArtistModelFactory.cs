@@ -7,6 +7,6 @@ namespace Lunafy.Api.Factories;
 
 public interface IArtistModelFactory
 {
-    Task<ArtistReadModel> PrepareArtistReadModelAsync(ArtistReadModel model, Artist artist);
-    Task<SearchResultModel<ArtistReadModel>> PrepareArtistReadSearchResultAsync(ArtistSearchCommand command);
+    Task<ArtistModel> PrepareArtistModelAsync(ArtistModel model, Artist artist);
+    Task<SearchResultModel<ArtistModel>> PrepareArtistSearchResultAsync(ArtistSearchCommand command);
 }

@@ -7,7 +7,7 @@ namespace Lunafy.Api.Areas.Admin.Factories;
 
 public interface IUserModelsFactory
 {
-    Task<UserReadModel> PrepareUserReadModelAsync(UserReadModel model, User user);
+    Task<UserModel> PrepareUserModelAsync(UserModel model, User user);
 
-    Task<SearchResultModel<UserReadModel>> PrepareUserReadSearchResultAsync(UserSearchCommand searchCommand);
+    Task<SearchResultModel<UserModel>> PrepareUserSearchResultAsync(UserSearchCommand searchCommand);
 }

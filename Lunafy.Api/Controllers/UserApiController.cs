@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using AutoMapper;
 using Lunafy.Api.Models;
 using Lunafy.Api.Models.User;
 using Lunafy.Core.Domains;
@@ -16,21 +15,18 @@ namespace Lunafy.Api.Controllers;
 [Route("api/user")]
 public class UserApiController : ControllerBase
 {
-    private readonly IMapper _mapper;
     private readonly ITransactionManager _transactionManager;
     private readonly IUserService _userService;
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly IAuthService _authService;
     private readonly IConfiguration _configuration;
 
-    public UserApiController(IMapper mapper,
-        ITransactionManager transactionManager,
+    public UserApiController(ITransactionManager transactionManager,
         IUserService userService,
         IRefreshTokenService refreshTokenService,
         IAuthService authService,
         IConfiguration configuration)
     {
-        _mapper = mapper;
         _transactionManager = transactionManager;
         _userService = userService;
         _refreshTokenService = refreshTokenService;
@@ -64,7 +60,7 @@ public class UserApiController : ControllerBase
             return BadRequest(response);
         }
 
-        var userModel = _mapper.Map<UserModel>(user);
+        var userModel = user.ToModel();
         var jwt = await LoginAsync(user);
         var loginResponse = new LoginResponseModel
         {
@@ -88,7 +84,7 @@ public class UserApiController : ControllerBase
             return BadRequest("User with email or username already exists.");
         }
 
-        user = _mapper.Map<User>(model);
+        user = model.ToEntity();
         try
         {
             await _transactionManager.ExecuteAsync(async () =>
@@ -97,7 +93,7 @@ public class UserApiController : ControllerBase
                 await _userService.CreatePasswordAsync(user.Id, model.Password);
             });
 
-            var userModel = _mapper.Map<UserModel>(user);
+            var userModel = user.ToModel();
             var jwt = await LoginAsync(user);
             var response = new LoginResponseModel
             {
@@ -167,7 +163,7 @@ public class UserApiController : ControllerBase
             await _authService.GenerateRefreshToken(user);
         }
 
-        var userModel = _mapper.Map<UserModel>(user);
+        var userModel = user.ToModel();
         var jwt = await _authService.GenerateJwtToken(user);
         var loginResponse = new LoginResponseModel
         {

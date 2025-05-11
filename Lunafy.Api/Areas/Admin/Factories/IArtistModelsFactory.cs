@@ -8,6 +8,6 @@ namespace Lunafy.Api.Areas.Admin.Factories;
 
 public interface IArtistModelsFactory
 {
-    Task<ArtistReadModel> PrepareArtistReadModelAsync(ArtistReadModel model, Artist artist);
-    Task<SearchResultModel<ArtistReadModel>> PrepareArtistReadSearchResultAsync(ArtistSearchCommand searchCommand);
+    Task<ArtistModel> PrepareArtistModelAsync(ArtistModel model, Artist artist);
+    Task<SearchResultModel<ArtistModel>> PrepareArtistSearchResultAsync(ArtistSearchCommand searchCommand);
 }

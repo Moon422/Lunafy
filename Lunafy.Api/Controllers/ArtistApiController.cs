@@ -1,12 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using AutoMapper;
 using Lunafy.Api.Factories;
 using Lunafy.Api.Models.Artist;
-using Lunafy.Core.Domains;
 using Lunafy.Core.Infrastructure;
 using Lunafy.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -21,19 +18,16 @@ namespace Lunafy.Api.Controllers;
 public class ArtistApiController : ControllerBase
 {
     private readonly IWebHostEnvironment _env;
-    private readonly IMapper _mapper;
     private IArtistService _artistService;
     private readonly IArtistModelFactory _artistModelFactory;
     private readonly IWorkContext _workContext;
 
     public ArtistApiController(IWebHostEnvironment env,
-        IMapper mapper,
         IArtistService artistService,
         IArtistModelFactory artistModelFactory,
         IWorkContext workContext)
     {
         _env = env;
-        _mapper = mapper;
         _artistService = artistService;
         _artistModelFactory = artistModelFactory;
         _workContext = workContext;
@@ -45,7 +39,7 @@ public class ArtistApiController : ControllerBase
         Math.Clamp(command.PageNumber, 1, int.MaxValue);
         Math.Clamp(command.PageSize, 1, int.MaxValue);
 
-        var searchResult = await _artistModelFactory.PrepareArtistReadSearchResultAsync(command);
+        var searchResult = await _artistModelFactory.PrepareArtistSearchResultAsync(command);
 
         return Ok(searchResult);
     }
@@ -59,15 +53,15 @@ public class ArtistApiController : ControllerBase
             return NotFound($"Artist with id {id} not found.");
         }
 
-        var model = await _artistModelFactory.PrepareArtistReadModelAsync(_mapper.Map<ArtistReadModel>(artist), artist);
+        var model = await _artistModelFactory.PrepareArtistModelAsync(artist.ToModel(), artist);
 
         return Ok(model);
     }
 
     [HttpPost, Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Create([FromBody] ArtistWriteModel model)
+    public async Task<IActionResult> Create([FromBody] ArtistModel model)
     {
-        var artist = _mapper.Map<Artist>(model);
+        var artist = model.ToEntity();
         await _artistService.CreateArtistAsync(artist);
 
         var wwwRootImages = Path.Join(_env.WebRootPath, "images");
@@ -79,12 +73,12 @@ public class ArtistApiController : ControllerBase
             System.IO.File.Copy(file, Path.Join(directory.FullName, file.Split('_').Last()));
         }
 
-        var response = await _artistModelFactory.PrepareArtistReadModelAsync(_mapper.Map<ArtistReadModel>(artist), artist);
+        var response = await _artistModelFactory.PrepareArtistModelAsync(artist.ToModel(), artist);
         return CreatedAtAction(nameof(Details), new { id = artist.Id }, response);
     }
 
     [HttpPut, Authorize]
-    public async Task<IActionResult> Edit([FromBody] ArtistWriteModel model)
+    public async Task<IActionResult> Edit([FromBody] ArtistModel model)
     {
         var user = await _workContext.GetCurrentUserAsync();
         if (user is null || !user.IsAdmin || await _artistService.CanBeEditedByUserAsync(model.Id, user.Id))
@@ -92,10 +86,10 @@ public class ArtistApiController : ControllerBase
             return Forbid();
         }
 
-        var artist = _mapper.Map<Artist>(model);
+        var artist = model.ToEntity();
         await _artistService.UpdateArtistAsync(artist);
 
-        var response = _mapper.Map<ArtistReadModel>(artist);
+        var response = artist.ToModel();
         return Ok(response);
     }
 

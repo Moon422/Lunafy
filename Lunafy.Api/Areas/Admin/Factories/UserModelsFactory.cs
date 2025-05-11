@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Lunafy.Api.Areas.Admin.Models.Users;
 using Lunafy.Api.Models;
 using Lunafy.Core.Domains;
@@ -15,36 +13,33 @@ namespace Lunafy.Api.Areas.Admin.Factories;
 public class UserModelsFactory : IUserModelsFactory
 {
     private readonly IUserService _userService;
-    private readonly IMapper _mapper;
 
-    public UserModelsFactory(IUserService userService,
-        IMapper mapper)
+    public UserModelsFactory(IUserService userService)
     {
         _userService = userService;
-        _mapper = mapper;
     }
 
-    public async Task<UserReadModel> PrepareUserReadModelAsync(UserReadModel model, User user)
+    public async Task<UserModel> PrepareUserModelAsync(UserModel model, User user)
     {
         ArgumentNullException.ThrowIfNull(model, nameof(model));
 
         return await Task.FromResult(model);
     }
 
-    public async Task<SearchResultModel<UserReadModel>> PrepareUserReadSearchResultAsync(UserSearchCommand searchCommand)
+    public async Task<SearchResultModel<UserModel>> PrepareUserSearchResultAsync(UserSearchCommand searchCommand)
     {
         ArgumentNullException.ThrowIfNull(searchCommand, nameof(searchCommand));
 
-        var findCommand = _mapper.Map<FindUsersCommand>(searchCommand);
+        var findCommand = searchCommand.ToFindCommand();
         var usersResult = await _userService.FindUsersAsync(findCommand);
 
-        var userModels = new List<UserReadModel>();
+        var userModels = new List<UserModel>();
         foreach (var user in usersResult)
         {
-            userModels.Add(await PrepareUserReadModelAsync(_mapper.Map<UserReadModel>(user), user));
+            userModels.Add(await PrepareUserModelAsync(user.ToModel(), user));
         }
 
-        return new SearchResultModel<UserReadModel>
+        return new SearchResultModel<UserModel>
         {
             Data = userModels,
             PageNumber = usersResult.PageNumber,

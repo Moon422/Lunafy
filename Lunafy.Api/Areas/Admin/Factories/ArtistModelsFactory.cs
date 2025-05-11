@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AutoMapper;
 using Lunafy.Api.Areas.Admin.Models.Artists;
 using Lunafy.Api.Models;
 using Lunafy.Core.Domains;
 using Lunafy.Core.Infrastructure.Dependencies;
 using Lunafy.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace Lunafy.Api.Areas.Admin.Factories;
 
@@ -14,36 +14,50 @@ namespace Lunafy.Api.Areas.Admin.Factories;
 public class ArtistModelsFactory : IArtistModelsFactory
 {
     private readonly IArtistService _artistService;
-    private readonly IMapper _mapper;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public ArtistModelsFactory(IArtistService artistService,
-        IMapper mapper)
+        IHttpContextAccessor httpContextAccessor)
     {
-        _mapper = mapper;
         _artistService = artistService;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<ArtistReadModel> PrepareArtistReadModelAsync(ArtistReadModel model, Artist artist)
+    private string PrepareProfileImageUrl(Artist artist, int width)
+    {
+        var httpContext = _httpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("HttpContext cannot be null.");
+
+        var url = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/images/artists/profile/{artist.Id}/{width}.webp";
+        return url;
+    }
+
+    public async Task<ArtistModel> PrepareArtistModelAsync(ArtistModel model, Artist artist)
     {
         ArgumentNullException.ThrowIfNull(model, nameof(model));
+
+        model.ProfileImage64 = PrepareProfileImageUrl(artist, 64);
+        model.ProfileImage128 = PrepareProfileImageUrl(artist, 128);
+        model.ProfileImage256 = PrepareProfileImageUrl(artist, 256);
+        model.ProfileImage512 = PrepareProfileImageUrl(artist, 512);
 
         return await Task.FromResult(model);
     }
 
-    public async Task<SearchResultModel<ArtistReadModel>> PrepareArtistReadSearchResultAsync(ArtistSearchCommand searchCommand)
+    public async Task<SearchResultModel<ArtistModel>> PrepareArtistSearchResultAsync(ArtistSearchCommand searchCommand)
     {
         ArgumentNullException.ThrowIfNull(searchCommand, nameof(searchCommand));
 
-        var findCommand = _mapper.Map<FindArtistsCommand>(searchCommand);
+        var findCommand = searchCommand.ToFindCommand();
         var artistsResult = await _artistService.FindArtistsAsync(findCommand);
 
-        var artistModels = new List<ArtistReadModel>();
+        var artistModels = new List<ArtistModel>();
         foreach (var artist in artistsResult)
         {
-            artistModels.Add(await PrepareArtistReadModelAsync(_mapper.Map<ArtistReadModel>(artist), artist));
+            artistModels.Add(await PrepareArtistModelAsync(artist.ToModel(), artist));
         }
 
-        return new SearchResultModel<ArtistReadModel>
+        return new SearchResultModel<ArtistModel>
         {
             Data = artistModels,
             PageNumber = artistsResult.PageNumber,

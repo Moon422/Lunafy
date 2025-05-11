@@ -1,8 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using Lunafy.Api.Models;
 
-namespace Lunafy.Api.Areas.Admin.Models.Artists;
+namespace Lunafy.Api.Models.Artist;
 
 public record ArtistModel : BaseEntityModel
 {
@@ -17,12 +16,12 @@ public record ArtistModel : BaseEntityModel
 
     public Guid? MusicBrainzId { get; set; }
 
-    public string ProfileImage512 { get; set; }
-    public string ProfileImage256 { get; set; }
-    public string ProfileImage128 { get; set; }
-    public string ProfileImage64 { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime? ModifiedOn { get; set; }
     public bool Deleted { get; set; }
     public DateTime? DeletedOn { get; set; }
+    public string ProfileImage512 { get; set; }
+    public string ProfileImage256 { get; set; }
+    public string ProfileImage128 { get; set; }
+    public string ProfileImage64 { get; set; }
 }

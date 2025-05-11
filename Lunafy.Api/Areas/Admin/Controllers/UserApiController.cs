@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using AutoMapper;
 using Lunafy.Api.Areas.Admin.Factories;
 using Lunafy.Api.Areas.Admin.Models.Users;
 using Lunafy.Api.Models;
@@ -21,17 +20,14 @@ public class UserApiController : ControllerBase
     private readonly IUserService _userService;
     private readonly IUserModelsFactory _userModelsFactory;
     private readonly IWorkContext _workContext;
-    private readonly IMapper _mapper;
 
     public UserApiController(IUserService userService,
         IUserModelsFactory userModelsFactory,
-        IWorkContext workContext,
-        IMapper mapper)
+        IWorkContext workContext)
     {
         _workContext = workContext;
         _userModelsFactory = userModelsFactory;
         _userService = userService;
-        _mapper = mapper;
     }
 
     [HttpGet]
@@ -46,8 +42,8 @@ public class UserApiController : ControllerBase
         Math.Clamp(command.PageNumber, 1, int.MaxValue);
         Math.Clamp(command.PageSize, 1, int.MaxValue);
 
-        var searchResult = await _userModelsFactory.PrepareUserReadSearchResultAsync(command);
-        var response = new HttpResponseModel<SearchResultModel<UserReadModel>>
+        var searchResult = await _userModelsFactory.PrepareUserSearchResultAsync(command);
+        var response = new HttpResponseModel<SearchResultModel<UserModel>>
         {
             Data = searchResult
         };
@@ -64,7 +60,7 @@ public class UserApiController : ControllerBase
             return Forbid();
         }
 
-        var response = new HttpResponseModel<UserReadModel>();
+        var response = new HttpResponseModel<UserModel>();
         if (id <= 0)
         {
             response.Errors.Add("User Id cannot be less than zero. Provide a valid user Id.");
@@ -78,20 +74,20 @@ public class UserApiController : ControllerBase
             return NotFound(response);
         }
 
-        var model = await _userModelsFactory.PrepareUserReadModelAsync(_mapper.Map<UserReadModel>(userEntity), userEntity);
+        var model = await _userModelsFactory.PrepareUserModelAsync(userEntity.ToModel(), userEntity);
         response.Data = model;
         return Ok(response);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(UserCreateModel model)
+    public async Task<IActionResult> Create(UserModel model)
     {
         var user = await _workContext.GetCurrentUserAsync();
         if (user is null || !user.IsAdmin)
         {
             return Forbid();
         }
-        var response = new HttpResponseModel<UserReadModel>();
+        var response = new HttpResponseModel<UserModel>();
         if (await _userService.GetUserByEmailAsync(model.Email) is not null)
         {
             response.Errors.Add("User with same email already exists.");
@@ -104,18 +100,18 @@ public class UserApiController : ControllerBase
             return BadRequest(response);
         }
 
-        var userEntity = _mapper.Map<User>(model);
+        var userEntity = model.ToEntity();
         userEntity.RequirePasswordReset = true;
         await _userService.CreateUserAsync(userEntity);
 
-        var userModel = await _userModelsFactory.PrepareUserReadModelAsync(_mapper.Map<UserReadModel>(userEntity), userEntity);
+        var userModel = await _userModelsFactory.PrepareUserModelAsync(userEntity.ToModel(), userEntity);
         response.Data = userModel;
 
         return CreatedAtAction(nameof(Get), new { id = userEntity.Id }, response);
     }
 
     [HttpPut]
-    public async Task<IActionResult> Update(UserCreateModel model)
+    public async Task<IActionResult> Update(UserModel model)
     {
         var user = await _workContext.GetCurrentUserAsync();
         if (user is null || !user.IsAdmin)
@@ -123,31 +119,37 @@ public class UserApiController : ControllerBase
             return Forbid();
         }
 
-        var response = new HttpResponseModel<UserReadModel>();
+        var response = new HttpResponseModel<UserModel>();
         if (model.Id <= 0)
         {
             response.Errors.Add("User Id is required.");
             return BadRequest(response);
         }
 
-        User? userEntity;
-        if ((userEntity = await _userService.GetUserByEmailAsync(model.Email)) is not null && userEntity.Id != model.Id)
+        User? entity;
+        if ((entity = await _userService.GetUserByEmailAsync(model.Email)) is not null && entity.Id != model.Id)
         {
             response.Errors.Add("User with same email already exists.");
             return BadRequest(response);
         }
 
-        if ((userEntity = await _userService.GetUserByEmailAsync(model.Username)) is not null && userEntity.Id != model.Id)
+        if ((entity = await _userService.GetUserByEmailAsync(model.Username)) is not null && entity.Id != model.Id)
         {
             response.Errors.Add("User with same username already exists.");
             return BadRequest(response);
         }
 
-        userEntity = _mapper.Map<User>(model);
-        await _userService.UpdateUserAsync(userEntity);
+        entity = await _userService.GetUserByIdAsync(model.Id);
+        if (entity is null)
+        {
+            return BadRequest("User not found.");
+        }
 
-        var userModel = await _userModelsFactory.PrepareUserReadModelAsync(_mapper.Map<UserReadModel>(userEntity), userEntity);
-        response.Data = userModel;
+        entity = model.UpdateEntity(entity);
+        await _userService.UpdateUserAsync(entity);
+
+        model = await _userModelsFactory.PrepareUserModelAsync(entity.ToModel(), entity);
+        response.Data = model;
 
         return Ok(response);
     }
