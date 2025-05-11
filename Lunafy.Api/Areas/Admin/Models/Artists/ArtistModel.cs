@@ -26,6 +26,7 @@ public record ArtistModel : BaseEntityModel
 
 public record ProfilePictureModel : BaseModel
 {
+    public string ProfileImage1024 { get; set; }
     public string ProfileImage512 { get; set; }
     public string ProfileImage256 { get; set; }
     public string ProfileImage128 { get; set; }

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import Loader from '@/components/admin/Loader.vue'
 import { useAuthStore } from '@/stores/auth'
-import type { ArtistCreateErrorModel, ArtistCreateModel, ArtistEditModel, ArtistReadModel } from '@/types/admin'
+import type { ArtistCreateErrorModel, ArtistCreateModel, ArtistEditModel, ArtistReadModel, ProfilePictureModel } from '@/types/admin'
 import type { HttpResponseModel } from '@/types/common'
 import type { LoginResponseModel } from '@/types/user'
 import { HTTP_STATUS } from '@/utils'
-import { computed, onMounted, reactive, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
 
@@ -23,6 +23,9 @@ const state = reactive<{
     artistErrorModel: ArtistCreateErrorModel,
     musicBrainzIdValidating: boolean,
     uploadProfileImage: File | null,
+    uploadProfileImageSuccessMsg: string | null,
+    uploadProfileImageFailMsg: string | null,
+
 }>({
     loading: false,
     artistModel: {
@@ -38,7 +41,11 @@ const state = reactive<{
     },
     musicBrainzIdValidating: false,
     uploadProfileImage: null,
+    uploadProfileImageSuccessMsg: null,
+    uploadProfileImageFailMsg: null
 })
+
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const fetchArtist = async () => {
     const headers: Headers = new Headers({ 'Content-Type': 'application/json' })
@@ -253,7 +260,7 @@ const confirmUploadImage = async () => {
     await uploadImage()
 }
 
-const uploadImage = async () => {
+const sendUploadRequest = async () => {
     const formData = new FormData()
     formData.append("image", state.uploadProfileImage || new Blob([], { type: "application/octet-stream" }), state.uploadProfileImage?.name || '')
 
@@ -263,6 +270,48 @@ const uploadImage = async () => {
         credentials: 'include',
         body: formData
     })
+
+    if (response.status === HTTP_STATUS.UNAUTHORIZED) {
+        return response.status
+    }
+
+    const { errors }: HttpResponseModel<ProfilePictureModel> = await response.json()
+    if (!response.ok) {
+        const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
+        state.uploadProfileImageFailMsg = errorMsg
+        return response.status
+    }
+
+    state.uploadProfileImage = null
+    if (fileInput.value) fileInput.value.value = ''
+    state.uploadProfileImageSuccessMsg = "Profile picture uploaded successfully."
+    return response.status
+}
+
+const uploadImage = async () => {
+    state.uploadProfileImageFailMsg = null
+    state.uploadProfileImageSuccessMsg = null
+
+    state.loading = true
+    try {
+        if (await sendUploadRequest() === HTTP_STATUS.UNAUTHORIZED) {
+            const loginResponse = await fetch(`${baseUrl}/api/user/refresh-token`, {
+                credentials: 'include'
+            })
+
+            if (!loginResponse.ok) {
+                router.push('/login')
+            }
+
+            await sendUploadRequest()
+        }
+
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        state.error = errorMessage
+    } finally {
+        state.loading = false
+    }
 }
 
 watch(() => state.error, () => {
@@ -434,7 +483,18 @@ onMounted(async () => {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="formFile" class="form-label">Profile Image</label>
-                        <input class="form-control" type="file" @change="handleUploadProfileImage">
+                        <input class="form-control" type="file" @change="handleUploadProfileImage" ref="fileInput">
+                        <div :class="`${state.uploadProfileImageSuccessMsg && state.uploadProfileImageSuccessMsg.length > 0
+                            ? 'valid-feedback d-block'
+                            : state.uploadProfileImageFailMsg && state.uploadProfileImageFailMsg.length > 0
+                                ? 'invalid-feedback d-block'
+                                : 'd-none'}`">
+                            {{ state.uploadProfileImageSuccessMsg && state.uploadProfileImageSuccessMsg.length > 0
+                                ? state.uploadProfileImageSuccessMsg
+                                : state.uploadProfileImageFailMsg && state.uploadProfileImageFailMsg.length > 0
+                                    ? state.uploadProfileImageFailMsg
+                                    : '' }}
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -10,4 +10,5 @@ public interface IArtistModelsFactory
 {
     Task<ArtistModel> PrepareArtistModelAsync(ArtistModel model, Artist artist);
     Task<SearchResultModel<ArtistModel>> PrepareArtistSearchResultAsync(ArtistSearchCommand searchCommand);
+    ProfilePictureModel? PrepareProfilePictureModel(ProfilePictureModel? model, int artistId);
 }

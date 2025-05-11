@@ -23,24 +23,25 @@ public class ArtistModelsFactory : IArtistModelsFactory
         _httpContextAccessor = httpContextAccessor;
     }
 
-    private string PrepareProfileImageUrl(Artist artist, int width)
+    private string PrepareProfileImageUrl(int artistId, int width)
     {
         var httpContext = _httpContextAccessor.HttpContext
             ?? throw new InvalidOperationException("HttpContext cannot be null.");
 
-        var url = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/images/artists/profile/{artist.Id}/{width}.webp";
+        var url = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/images/artists/profile/{artistId}/{width}.webp";
         return url;
     }
 
-    public ProfilePictureModel? PrepareProfilePictureModel(ProfilePictureModel? model, Artist artist)
+    public ProfilePictureModel? PrepareProfilePictureModel(ProfilePictureModel? model, int artistId)
     {
-        if (model is null)
+        if (model is null || artistId <= 0)
             return null;
 
-        model.ProfileImage64 = PrepareProfileImageUrl(artist, 64);
-        model.ProfileImage128 = PrepareProfileImageUrl(artist, 128);
-        model.ProfileImage256 = PrepareProfileImageUrl(artist, 256);
-        model.ProfileImage512 = PrepareProfileImageUrl(artist, 512);
+        model.ProfileImage64 = PrepareProfileImageUrl(artistId, 64);
+        model.ProfileImage128 = PrepareProfileImageUrl(artistId, 128);
+        model.ProfileImage256 = PrepareProfileImageUrl(artistId, 256);
+        model.ProfileImage512 = PrepareProfileImageUrl(artistId, 512);
+        model.ProfileImage1024 = PrepareProfileImageUrl(artistId, 1024);
 
         return model;
     }
@@ -50,7 +51,7 @@ public class ArtistModelsFactory : IArtistModelsFactory
         ArgumentNullException.ThrowIfNull(model, nameof(model));
 
         model.ProfilePicture = new ProfilePictureModel();
-        model.ProfilePicture = PrepareProfilePictureModel(model.ProfilePicture, artist);
+        model.ProfilePicture = PrepareProfilePictureModel(model.ProfilePicture, artist.Id);
 
         return await Task.FromResult(model);
     }

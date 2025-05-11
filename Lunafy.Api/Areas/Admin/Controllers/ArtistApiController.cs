@@ -26,6 +26,7 @@ public class ArtistApiController : ControllerBase
     private readonly IArtistService _artistService;
     private readonly IArtistModelsFactory _artistModelsFactory;
     private readonly IWorkContext _workContext;
+    private readonly int[] IMAGE_DIMENSION = { 64, 128, 256, 512, 1024 };
 
     public ArtistApiController(IWebHostEnvironment env,
         IArtistService artistService,
@@ -187,7 +188,7 @@ public class ArtistApiController : ControllerBase
     }
 
     [HttpPost("{artistId}/upload-profile-picture")]
-    public async Task<IActionResult> UploadProfilePicture(int artistId, [FromForm] IFormFile image)
+    public async Task<IActionResult> UploadProfilePicture(int artistId, [FromForm] IFormFile? image)
     {
         var user = await _workContext.GetCurrentUserAsync();
         if (user is null || !user.IsAdmin)
@@ -196,11 +197,30 @@ public class ArtistApiController : ControllerBase
         }
 
         var artist = await _artistService.GetArtistByIdAsync(artistId);
-        var response = new HttpResponseModel();
+        var response = new HttpResponseModel<ProfilePictureModel>();
         if (artist is null)
         {
             response.Errors.Add("Artist not found.");
             return BadRequest(response);
+        }
+
+        var imageRoot = Path.Join(_env.WebRootPath, "images");
+        var profilePicDir = Path.Join(imageRoot, "artists", "profile", artist.Id.ToString());
+        foreach (var file in Directory.EnumerateFiles(profilePicDir))
+        {
+            System.IO.File.Delete(file);
+        }
+
+        if (image is null || image.Length <= 0)
+        {
+            foreach (var imageSize in IMAGE_DIMENSION)
+            {
+                System.IO.File.Copy(Path.Join(imageRoot, $"no_image_{imageSize}.webp"),
+                    Path.Join(profilePicDir, $"{imageSize}.webp"));
+            }
+
+            response.Data = _artistModelsFactory.PrepareProfilePictureModel(new ProfilePictureModel(), artist.Id);
+            return Ok(response);
         }
 
         var uploadImagesRoot = Path.Join(_env.WebRootPath, "images", "artists", "uploads", artist.Id.ToString());
@@ -209,14 +229,42 @@ public class ArtistApiController : ControllerBase
             Directory.CreateDirectory(uploadImagesRoot);
         }
 
-        using var bitmap = SKBitmap.Decode(image.OpenReadStream());
-        var skImage = SKImage.FromBitmap(bitmap);
+        var filePath = Path.Join(uploadImagesRoot, $"{DateTime.UtcNow:yyyyMMddTHHmmssZ}_1.webp");
 
-        var filePath = Path.Join(uploadImagesRoot, $"{Guid.NewGuid():N}.webp");
-        using var outputFileStream = System.IO.File.OpenWrite(filePath);
+        using (var bitmap = SKBitmap.Decode(image.OpenReadStream()))
+        using (var scaledBitmap = new SKBitmap(1024, 1024))
+        using (var canvas = new SKCanvas(scaledBitmap))
+        {
+            canvas.Clear(SKColors.Transparent);
+            var destRect = new SKRect(0, 0, 1024, 1024);
+            canvas.DrawBitmap(bitmap, destRect);
 
-        skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
+            var skImage = SKImage.FromBitmap(scaledBitmap);
 
-        return Ok("Images uploaded.");
+            using var outputFileStream = System.IO.File.OpenWrite(filePath);
+            skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
+        }
+
+        using (var bitmap = SKBitmap.Decode(image.OpenReadStream()))
+        {
+            foreach (var imageSize in IMAGE_DIMENSION)
+            {
+                var profilePictureFilePath = Path.Join(profilePicDir, $"{imageSize}.webp");
+                using var scaledBitmap = new SKBitmap(imageSize, imageSize);
+                using var canvas = new SKCanvas(scaledBitmap);
+                canvas.Clear(SKColors.Transparent);
+                var destRect = new SKRect(0, 0, imageSize, imageSize);
+                canvas.DrawBitmap(bitmap, destRect);
+
+                var skImage = SKImage.FromBitmap(scaledBitmap);
+
+                using var outputFileStream = System.IO.File.OpenWrite(profilePictureFilePath);
+                skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
+            }
+        }
+
+        response.Data = _artistModelsFactory.PrepareProfilePictureModel(new ProfilePictureModel(), artist.Id);
+
+        return Ok(response);
     }
 }
