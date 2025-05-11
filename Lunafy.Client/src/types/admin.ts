@@ -8,7 +8,7 @@ export interface TotalUsersStatApiResponse {
     changePercentage: number
 }
 
-export interface UserModel {
+interface UserModel {
     firstname: string
     lastname: string
     username: string
@@ -43,7 +43,7 @@ export interface UserReadModel extends UserModel {
     isEditable: boolean
 }
 
-export interface ArtistModel {
+interface ArtistModel {
     firstname: string
     lastname: string
     biography: string | null
@@ -62,14 +62,18 @@ export interface ArtistReadModel extends ArtistModel {
     modifiedOn: string | null
     deleted: boolean
     deletedOn: string | null
-    profileImage64: string
-    profileImage128: string
-    profileImage256: string
-    profileImage512: string
+    profilePicture: ProfilePictureModel | null
 }
 
 export interface ArtistCreateErrorModel {
     firstname: string | null
     lastname: string | null
     musicBrainzId: string | null
+}
+
+export interface ProfilePictureModel {
+    profileImage64: string
+    profileImage128: string
+    profileImage256: string
+    profileImage512: string
 }

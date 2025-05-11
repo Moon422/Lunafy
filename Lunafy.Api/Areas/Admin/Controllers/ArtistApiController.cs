@@ -10,7 +10,9 @@ using Lunafy.Core.Infrastructure;
 using Lunafy.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SkiaSharp;
 
 namespace Lunafy.Api.Areas.Admin.Controllers;
 
@@ -182,5 +184,39 @@ public class ArtistApiController : ControllerBase
     {
         var artist = await _artistService.GetArtistByMusicBrainzIdAsync(musicBrainzId);
         return Ok(artist is null || (artistId.HasValue && artist.Id == artistId));
+    }
+
+    [HttpPost("{artistId}/upload-profile-picture")]
+    public async Task<IActionResult> UploadProfilePicture(int artistId, [FromForm] IFormFile image)
+    {
+        var user = await _workContext.GetCurrentUserAsync();
+        if (user is null || !user.IsAdmin)
+        {
+            return Forbid();
+        }
+
+        var artist = await _artistService.GetArtistByIdAsync(artistId);
+        var response = new HttpResponseModel();
+        if (artist is null)
+        {
+            response.Errors.Add("Artist not found.");
+            return BadRequest(response);
+        }
+
+        var uploadImagesRoot = Path.Join(_env.WebRootPath, "images", "artists", "uploads", artist.Id.ToString());
+        if (!Directory.Exists(uploadImagesRoot))
+        {
+            Directory.CreateDirectory(uploadImagesRoot);
+        }
+
+        using var bitmap = SKBitmap.Decode(image.OpenReadStream());
+        var skImage = SKImage.FromBitmap(bitmap);
+
+        var filePath = Path.Join(uploadImagesRoot, $"{Guid.NewGuid():N}.webp");
+        using var outputFileStream = System.IO.File.OpenWrite(filePath);
+
+        skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
+
+        return Ok("Images uploaded.");
     }
 }

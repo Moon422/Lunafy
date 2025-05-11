@@ -32,14 +32,25 @@ public class ArtistModelsFactory : IArtistModelsFactory
         return url;
     }
 
-    public async Task<ArtistModel> PrepareArtistModelAsync(ArtistModel model, Artist artist)
+    public ProfilePictureModel? PrepareProfilePictureModel(ProfilePictureModel? model, Artist artist)
     {
-        ArgumentNullException.ThrowIfNull(model, nameof(model));
+        if (model is null)
+            return null;
 
         model.ProfileImage64 = PrepareProfileImageUrl(artist, 64);
         model.ProfileImage128 = PrepareProfileImageUrl(artist, 128);
         model.ProfileImage256 = PrepareProfileImageUrl(artist, 256);
         model.ProfileImage512 = PrepareProfileImageUrl(artist, 512);
+
+        return model;
+    }
+
+    public async Task<ArtistModel> PrepareArtistModelAsync(ArtistModel model, Artist artist)
+    {
+        ArgumentNullException.ThrowIfNull(model, nameof(model));
+
+        model.ProfilePicture = new ProfilePictureModel();
+        model.ProfilePicture = PrepareProfilePictureModel(model.ProfilePicture, artist);
 
         return await Task.FromResult(model);
     }

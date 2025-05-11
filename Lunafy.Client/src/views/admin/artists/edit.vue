@@ -21,7 +21,8 @@ const state = reactive<{
     error?: string | null,
     artistModel: ArtistCreateModel,
     artistErrorModel: ArtistCreateErrorModel,
-    musicBrainzIdValidating: boolean
+    musicBrainzIdValidating: boolean,
+    uploadProfileImage: File | null,
 }>({
     loading: false,
     artistModel: {
@@ -36,6 +37,7 @@ const state = reactive<{
         musicBrainzId: null,
     },
     musicBrainzIdValidating: false,
+    uploadProfileImage: null,
 })
 
 const fetchArtist = async () => {
@@ -234,6 +236,35 @@ const isFirstnameValid = computed(() => !state.artistErrorModel.firstname || sta
 const isLastnameValid = computed(() => !state.artistErrorModel.lastname || state.artistErrorModel.lastname.length <= 0)
 const isMusicBrainzIdValid = computed(() => !state.artistErrorModel.musicBrainzId || state.artistErrorModel.musicBrainzId.length <= 0)
 
+const handleUploadProfileImage = (e: Event) => {
+    const target = e.target as HTMLInputElement
+
+    state.uploadProfileImage = null
+    if (target.files && target.files.length > 0) {
+        state.uploadProfileImage = target.files[0]
+    }
+}
+
+const confirmUploadImage = async () => {
+    if (!state.uploadProfileImage) {
+        return
+    }
+
+    await uploadImage()
+}
+
+const uploadImage = async () => {
+    const formData = new FormData()
+    formData.append("image", state.uploadProfileImage || new Blob([], { type: "application/octet-stream" }), state.uploadProfileImage?.name || '')
+
+    const id = typeof artistId === 'string' ? Number.isNaN(artistId) ? 0 : parseInt(artistId) : Number.isNaN(artistId[0]) ? 0 : parseInt(artistId[0])
+    const response = await fetch(`${baseUrl}/api/admin/artist/${id}/upload-profile-picture`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+    })
+}
+
 watch(() => state.error, () => {
     if (state.error && state.error.length > 0) {
         toast.error(state.error, { onClose: () => state.error = null })
@@ -276,6 +307,11 @@ onMounted(async () => {
                     <button type="submit" class="btn btn-success me-2">
                         <i class="bi bi-floppy-fill"></i>
                         Save
+                    </button>
+                    <button type="submit" class="btn btn-success me-2" data-bs-toggle="modal"
+                        data-bs-target="#uploadProfileImage" @click.prevent="">
+                        <i class="bi bi-image-fill"></i>
+                        Upload Profile Image
                     </button>
                     <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                         data-bs-target="#deleteConfirmation" @click.prevent="">
@@ -380,6 +416,54 @@ onMounted(async () => {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-danger" @click="onDeleteConfirmation">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="uploadProfileImage" tabindex="-1" aria-labelledby="uploadProfileImageLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="uploadProfileImageLabel">
+                        Upload new profile image
+                    </h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="formFile" class="form-label">Profile Image</label>
+                        <input class="form-control" type="file" @change="handleUploadProfileImage">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary"
+                        :data-bs-target="!state.uploadProfileImage ? '#removeProfilePicture' : null"
+                        :data-bs-toggle="!state.uploadProfileImage ? 'modal' : null"
+                        @click="confirmUploadImage">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="removeProfilePicture" tabindex="-1" aria-labelledby="removeProfilePictureLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="removeProfilePictureLabel">
+                        Clear profile picture?
+                    </h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>You have not selected any image file. This is remove your existing profile picture. Do you want
+                        continue?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @click="uploadImage">Clear Profile
+                        Picture</button>
                 </div>
             </div>
         </div>
