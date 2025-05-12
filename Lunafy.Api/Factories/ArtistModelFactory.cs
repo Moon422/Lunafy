@@ -16,8 +16,6 @@ public class ArtistModelFactory : IArtistModelFactory
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IArtistService _artistService;
 
-    private readonly int[] IMAGE_DIMENSION = { 64, 128, 256, 512, 1024 };
-
     public ArtistModelFactory(IHttpContextAccessor httpContextAccessor,
         IArtistService artistService)
     {
@@ -44,7 +42,7 @@ public class ArtistModelFactory : IArtistModelFactory
         model.ProfileImage256 = PrepareProfileImageUrl(artist, 256);
         model.ProfileImage512 = PrepareProfileImageUrl(artist, 512);
 
-        return model;
+        return await Task.FromResult(model);
     }
 
     public async Task<SearchResultModel<ArtistModel>> PrepareArtistSearchResultAsync(ArtistSearchCommand command)

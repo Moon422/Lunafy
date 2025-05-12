@@ -24,12 +24,14 @@ public class ArtistApiController : ControllerBase
 {
     private readonly IWebHostEnvironment _env;
     private readonly IArtistService _artistService;
+    private readonly IPictureService _pictureService;
     private readonly IArtistModelsFactory _artistModelsFactory;
     private readonly IWorkContext _workContext;
     private readonly int[] IMAGE_DIMENSION = { 64, 128, 256, 512, 1024 };
 
     public ArtistApiController(IWebHostEnvironment env,
         IArtistService artistService,
+        IPictureService pictureService,
         IArtistModelsFactory artistModelsFactory,
         IWorkContext workContext)
     {
@@ -37,6 +39,7 @@ public class ArtistApiController : ControllerBase
         _workContext = workContext;
         _artistModelsFactory = artistModelsFactory;
         _artistService = artistService;
+        _pictureService = pictureService;
     }
 
     [HttpGet]
@@ -223,13 +226,21 @@ public class ArtistApiController : ControllerBase
             return Ok(response);
         }
 
-        var uploadImagesRoot = Path.Join(_env.WebRootPath, "images", "artists", "uploads", artist.Id.ToString());
+        var picture = new Picture
+        {
+            PictureEntityTypeId = (int)PictureEntityType.Artist,
+            EntityId = artist.Id,
+            Filename = $"{DateTime.UtcNow:yyyyMMddTHHmmssZ}_01"
+        };
+        await _pictureService.CreatePictureAsync(picture);
+
+        var uploadImagesRoot = Path.Join(_env.WebRootPath, _pictureService.GetPictureDirectory(picture));
         if (!Directory.Exists(uploadImagesRoot))
         {
             Directory.CreateDirectory(uploadImagesRoot);
         }
 
-        var filePath = Path.Join(uploadImagesRoot, $"{DateTime.UtcNow:yyyyMMddTHHmmssZ}_1.webp");
+        var filePath = Path.Join(_env.WebRootPath, _pictureService.GetPicturePath(picture));
 
         using (var bitmap = SKBitmap.Decode(image.OpenReadStream()))
         using (var scaledBitmap = new SKBitmap(1024, 1024))

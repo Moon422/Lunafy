@@ -54,6 +54,31 @@ public class PictureService : IPictureService
             return null;
         }
 
-        return Path.Join(entityType.ToString(), picture.EntityId.ToString(), $"{picture.Filename}.webp");
+        var entityName = entityType switch
+        {
+            PictureEntityType.User => "users",
+            PictureEntityType.Artist => "artists",
+            PictureEntityType.Song => "songs",
+            PictureEntityType.Album => "albums",
+            _ => null
+        };
+
+        return Path.Join("images", entityName, "uploads", picture.EntityId.ToString());
+    }
+
+    public string? GetPicturePath(Picture picture)
+    {
+        if (picture is null)
+        {
+            return null;
+        }
+
+        var entityType = (PictureEntityType)picture.PictureEntityTypeId;
+        if (!Enum.IsDefined(entityType))
+        {
+            return null;
+        }
+
+        return Path.Join(GetPictureDirectory(picture), $"{picture.Filename}.webp");
     }
 }

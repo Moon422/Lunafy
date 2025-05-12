@@ -164,7 +164,7 @@ public class LunafyDbContext : DbContext
         modelBuilder.Entity<Picture>(entity =>
         {
             entity.Property(p => p.Filename)
-                .HasMaxLength(16)
+                .HasMaxLength(19)
                 .IsFixedLength()
                 .IsRequired();
         });

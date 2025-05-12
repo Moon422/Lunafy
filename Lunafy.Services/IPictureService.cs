@@ -9,4 +9,5 @@ public interface IPictureService
     Task CreatePictureAsync(Picture picture);
     Task DeletePictureAsync(Picture picture);
     string? GetPictureDirectory(Picture picture);
+    string? GetPicturePath(Picture picture);
 }
