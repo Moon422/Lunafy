@@ -21,6 +21,7 @@ public class LunafyDbContext : DbContext
     public DbSet<AlbumEditAccess> AlbumEditAccesses { get; set; }
     public DbSet<ArtistEditAccess> ArtistEditAccesses { get; set; }
     public DbSet<SongEditAccess> SongEditAccesses { get; set; }
+    public DbSet<Picture> Pictures { get; set; }
 
     public LunafyDbContext(DbContextOptions options)
         : base(options)
@@ -157,6 +158,14 @@ public class LunafyDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<Picture>(entity =>
+        {
+            entity.Property(p => p.Filename)
+                .HasMaxLength(16)
+                .IsFixedLength()
                 .IsRequired();
         });
     }

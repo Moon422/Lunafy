@@ -28,7 +28,7 @@ public class RoleService : IRoleService
         if (roleId <= 0)
             return null;
 
-        return await _roleRepository.GetByIdAsync(roleId);
+        return await _roleRepository.GetByIdAsync(roleId, cache => default);
     }
 
     public async Task<IList<Role>> GetRolesByIdsAsync(IList<int> roleIds)
