@@ -14,6 +14,8 @@ public class Artist : BaseEntity, ICreationLogged, IModificationLogged, ISoftDel
     [MaxLength(512)]
     public string? Biography { get; set; }
 
+    public int? ProfilePictureId { get; set; }
+
     public Guid? MusicBrainzId { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime? ModifiedOn { get; set; }

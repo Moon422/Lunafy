@@ -41,7 +41,7 @@ public class PictureService : IPictureService
         await _pictureRepository.DeleteAsync(picture);
     }
 
-    public string? GetPictureDirectory(Picture picture)
+    public string? GetPictureDirectory(Picture picture, bool thumbDirectory = false)
     {
         if (picture is null)
         {
@@ -63,10 +63,10 @@ public class PictureService : IPictureService
             _ => null
         };
 
-        return Path.Join("images", entityName, "uploads", picture.EntityId.ToString());
+        return Path.Join("images", entityName, !thumbDirectory ? "uploads" : "thumbs", picture.EntityId.ToString());
     }
 
-    public string? GetPicturePath(Picture picture)
+    public string? GetPicturePath(Picture picture, bool thumbDirectory = false)
     {
         if (picture is null)
         {
@@ -79,6 +79,6 @@ public class PictureService : IPictureService
             return null;
         }
 
-        return Path.Join(GetPictureDirectory(picture), $"{picture.Filename}.webp");
+        return Path.Join(GetPictureDirectory(picture, thumbDirectory), $"{picture.Filename}.webp");
     }
 }

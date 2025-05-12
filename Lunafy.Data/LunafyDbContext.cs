@@ -168,5 +168,13 @@ public class LunafyDbContext : DbContext
                 .IsFixedLength()
                 .IsRequired();
         });
+
+        modelBuilder.Entity<Artist>(entity =>
+        {
+            entity.HasOne<Picture>()
+                .WithOne()
+                .HasForeignKey<Artist>(a => a.ProfilePictureId)
+                .IsRequired(false);
+        });
     }
 }

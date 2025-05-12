@@ -8,6 +8,6 @@ public interface IPictureService
     Task<Picture?> GetPictureByIdAsync(int id);
     Task CreatePictureAsync(Picture picture);
     Task DeletePictureAsync(Picture picture);
-    string? GetPictureDirectory(Picture picture);
-    string? GetPicturePath(Picture picture);
+    string? GetPictureDirectory(Picture picture, bool thumbDirectory = false);
+    string? GetPicturePath(Picture picture, bool thumbDirectory = false);
 }

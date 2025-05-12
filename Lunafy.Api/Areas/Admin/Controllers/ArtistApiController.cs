@@ -191,8 +191,11 @@ public class ArtistApiController : ControllerBase
     }
 
     [HttpPost("{artistId}/upload-profile-picture")]
-    public async Task<IActionResult> UploadProfilePicture(int artistId, [FromForm] IFormFile? image)
+    public async Task<IActionResult> UploadProfilePicture(int artistId, [FromForm] ChangeProfilePictureModel model)
     {
+        var pictureId = model.PictureId;
+        var image = model.Image;
+
         var user = await _workContext.GetCurrentUserAsync();
         if (user is null || !user.IsAdmin)
         {
@@ -207,24 +210,17 @@ public class ArtistApiController : ControllerBase
             return BadRequest(response);
         }
 
-        var imageRoot = Path.Join(_env.WebRootPath, "images");
-        var profilePicDir = Path.Join(imageRoot, "artists", "profile", artist.Id.ToString());
-        foreach (var file in Directory.EnumerateFiles(profilePicDir))
+        if (!pictureId.HasValue && (image is null || image.Length <= 0))
         {
-            System.IO.File.Delete(file);
-        }
+            artist.ProfilePictureId = null;
+            await _artistService.UpdateArtistAsync(artist);
 
-        if (image is null || image.Length <= 0)
-        {
-            foreach (var imageSize in IMAGE_DIMENSION)
-            {
-                System.IO.File.Copy(Path.Join(imageRoot, $"no_image_{imageSize}.webp"),
-                    Path.Join(profilePicDir, $"{imageSize}.webp"));
-            }
-
-            response.Data = _artistModelsFactory.PrepareProfilePictureModel(new ProfilePictureModel(), artist.Id);
+            response.Data = await _artistModelsFactory.PrepareProfilePictureModelAsync(new ProfilePictureModel(), artist);
             return Ok(response);
         }
+
+        var imageRoot = Path.Join(_env.WebRootPath, "images");
+        var profilePicDir = Path.Join(imageRoot, "artists", "thumbs", artist.Id.ToString());
 
         var picture = new Picture
         {
@@ -274,7 +270,7 @@ public class ArtistApiController : ControllerBase
             }
         }
 
-        response.Data = _artistModelsFactory.PrepareProfilePictureModel(new ProfilePictureModel(), artist.Id);
+        response.Data = await _artistModelsFactory.PrepareProfilePictureModelAsync(new ProfilePictureModel(), artist);
 
         return Ok(response);
     }

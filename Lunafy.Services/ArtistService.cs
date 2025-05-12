@@ -21,6 +21,7 @@ public class ArtistService : IArtistService
     private readonly IRepository<Song> _songRepository;
     private readonly IRepository<Album> _albumRepository;
     private readonly IRepository<ArtistEditAccess> _artistEditAccessRepository;
+    private readonly IRepository<Picture> _pictureRepository;
     private readonly ICacheManager _cacheManager;
 
     #endregion
@@ -32,6 +33,7 @@ public class ArtistService : IArtistService
         IRepository<Song> songRepository,
         IRepository<Album> albumRepository,
         IRepository<ArtistEditAccess> artistEditAccessRepository,
+        IRepository<Picture> pictureRepository,
         ICacheManager cacheManager)
     {
         _artistRepository = artistRepository ?? throw new ArgumentNullException(nameof(artistRepository));
@@ -40,6 +42,7 @@ public class ArtistService : IArtistService
         _albumRepository = albumRepository;
         _artistEditAccessRepository = artistEditAccessRepository;
         _cacheManager = cacheManager;
+        _pictureRepository = pictureRepository;
     }
 
     #endregion
@@ -206,6 +209,31 @@ public class ArtistService : IArtistService
             .Join(songQuery, asm => asm.SongId, s => s.Id, (asm, s) => s)
             .Join(albumQuery, s => s.AlbumId, a => a.Id, (s, a) => a)
             .ToPagedListAsync(pageIndex, pageSize);
+    }
+
+    public async Task<Picture?> GetProfilePictureAsync(int artistId)
+    {
+        if (artistId <= 0)
+            return null;
+
+        var cacheKey = _cacheManager.PrepareCacheKey(ArtistCacheDefaults.ArtistProfilePictureCacheKey, artistId);
+        return await _cacheManager.GetAsync(cacheKey, async () =>
+        {
+            return await _pictureRepository.Table
+                .Where(x => x.PictureEntityTypeId == (int)PictureEntityType.Artist
+                    && x.EntityId == artistId)
+                .FirstOrDefaultAsync();
+        });
+    }
+
+    public async Task<IPagedList<Picture>> GetAllPicturesPagedAsync(FindArtistPicturesCommand command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        return await _pictureRepository.Table
+            .Where(x => x.PictureEntityTypeId == (int)PictureEntityType.Artist
+                    && x.EntityId == command.ArtistId)
+            .ToPagedListAsync(command.PageIndex, command.PageSize);
     }
 
     #endregion

@@ -18,6 +18,12 @@ public class ArtistCacheEventConsumer : CacheEventConsumer<Artist>
             await RemoveByPrefixAsync(ArtistCacheDefaults.UserCanEditPrefix);
             await RemoveByPrefixAsync(ArtistCacheDefaults.UserCanDeletePrefix);
             await RemoveByPrefixAsync(ArtistCacheDefaults.ArtistByMusicBrainzIdPrefix);
+            await RemoveByPrefixAsync(ArtistCacheDefaults.ArtistProfilePicturePrefix);
+        }
+
+        if (entityEventType == EntityEventType.Update)
+        {
+            await RemoveByPrefixAsync(ArtistCacheDefaults.ArtistProfilePicturePrefix);
         }
 
         await base.ClearCacheAsync(entity, entityEventType);

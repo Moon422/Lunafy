@@ -12,3 +12,8 @@ public record FindUsersCommand : FindEntitiesCommand
     public DateTime? CreatedOnFromUtc { get; set; }
     public DateTime? CreatedOnTillUtc { get; set; }
 }
+
+public record FindArtistPicturesCommand : FindEntitiesCommand
+{
+    public int ArtistId { get; set; }
+}
