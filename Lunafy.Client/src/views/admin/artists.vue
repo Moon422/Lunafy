@@ -4,6 +4,7 @@ import type { ArtistReadModel } from '@/types/admin'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Pagination from '@/components/admin/Pagination.vue'
+import Loader from '@/components/admin/Loader.vue'
 import { HTTP_STATUS } from '@/utils'
 import type { HttpResponseModel, SearchResultModel } from '@/types/common'
 import type { LoginResponseModel } from '@/types/user'
@@ -165,7 +166,7 @@ watch([page, pageSize], async () => {
             <thead>
                 <tr>
                     <th scope="col">#</th>
-                    <th scope="col">Image</th>
+                    <th scope="col" style="width: 64px;">Image</th>
                     <th scope="col">Name</th>
                     <th scope="col">MusicBrainz Id</th>
                     <!-- <th scope="col">Genres</th> -->
@@ -186,8 +187,8 @@ watch([page, pageSize], async () => {
                     <tr v-for="artist in artists" :key="artist.id">
                         <th scope="row">{{ artist.id }}</th>
                         <th scope="row">
-                            <img :src="`${baseUrl}/images/artists/profile/${artist.id}/64.webp`"
-                                alt="Artist profile picture" width="64" height="64">
+                            <img :src="artist.profilePicture?.profileImage64" alt="Artist profile picture" width="64"
+                                height="64">
                         </th>
                         <th scope="row">{{ artist.firstname }} {{ artist.lastname }}</th>
                         <th scope="row">{{ artist.musicBrainzId }}</th>

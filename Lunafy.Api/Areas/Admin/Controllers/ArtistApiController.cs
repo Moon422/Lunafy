@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Api.Areas.Admin.Factories;
+using Lunafy.Api.Areas.Admin.Models;
 using Lunafy.Api.Areas.Admin.Models.Artists;
 using Lunafy.Api.Models;
 using Lunafy.Core.Domains;
@@ -26,6 +27,7 @@ public class ArtistApiController : ControllerBase
     private readonly IArtistService _artistService;
     private readonly IPictureService _pictureService;
     private readonly IArtistModelsFactory _artistModelsFactory;
+    private readonly IPictureModelFactory _pictureModelFactory;
     private readonly IWorkContext _workContext;
     private readonly int[] IMAGE_DIMENSION = { 64, 128, 256, 512, 1024 };
 
@@ -33,6 +35,7 @@ public class ArtistApiController : ControllerBase
         IArtistService artistService,
         IPictureService pictureService,
         IArtistModelsFactory artistModelsFactory,
+        IPictureModelFactory pictureModelFactory,
         IWorkContext workContext)
     {
         _env = env;
@@ -40,6 +43,7 @@ public class ArtistApiController : ControllerBase
         _artistModelsFactory = artistModelsFactory;
         _artistService = artistService;
         _pictureService = pictureService;
+        _pictureModelFactory = pictureModelFactory;
     }
 
     [HttpGet]
@@ -203,7 +207,7 @@ public class ArtistApiController : ControllerBase
         }
 
         var artist = await _artistService.GetArtistByIdAsync(artistId);
-        var response = new HttpResponseModel<ProfilePictureModel>();
+        var response = new HttpResponseModel<PictureModel>();
         if (artist is null)
         {
             response.Errors.Add("Artist not found.");
@@ -215,12 +219,18 @@ public class ArtistApiController : ControllerBase
             artist.ProfilePictureId = null;
             await _artistService.UpdateArtistAsync(artist);
 
-            response.Data = await _artistModelsFactory.PrepareProfilePictureModelAsync(new ProfilePictureModel(), artist);
+            response.Data = new PictureModel
+            {
+                PictureEntityTypeId = (int)PictureEntityType.Artist,
+                PictureEntityTypeIdStr = PictureEntityType.Artist.ToString(),
+                EntityId = artist.Id
+            };
+            response.Data = await _pictureModelFactory.PreparePictureModelAsync(response.Data, null);
             return Ok(response);
         }
 
         var imageRoot = Path.Join(_env.WebRootPath, "images");
-        var profilePicDir = Path.Join(imageRoot, "artists", "thumbs", artist.Id.ToString());
+        var thumbPicDir = Path.Join(imageRoot, "artists", "thumbs", artist.Id.ToString());
 
         var picture = new Picture
         {
@@ -229,6 +239,9 @@ public class ArtistApiController : ControllerBase
             Filename = $"{DateTime.UtcNow:yyyyMMddTHHmmssZ}_01"
         };
         await _pictureService.CreatePictureAsync(picture);
+
+        artist.ProfilePictureId = picture.Id;
+        await _artistService.UpdateArtistAsync(artist);
 
         var uploadImagesRoot = Path.Join(_env.WebRootPath, _pictureService.GetPictureDirectory(picture));
         if (!Directory.Exists(uploadImagesRoot))
@@ -256,7 +269,7 @@ public class ArtistApiController : ControllerBase
         {
             foreach (var imageSize in IMAGE_DIMENSION)
             {
-                var profilePictureFilePath = Path.Join(profilePicDir, $"{imageSize}.webp");
+                var thumbFilePath = Path.Join(thumbPicDir, $"{picture.Filename}_{imageSize}.webp");
                 using var scaledBitmap = new SKBitmap(imageSize, imageSize);
                 using var canvas = new SKCanvas(scaledBitmap);
                 canvas.Clear(SKColors.Transparent);
@@ -265,12 +278,13 @@ public class ArtistApiController : ControllerBase
 
                 var skImage = SKImage.FromBitmap(scaledBitmap);
 
-                using var outputFileStream = System.IO.File.OpenWrite(profilePictureFilePath);
+                using var outputFileStream = System.IO.File.OpenWrite(thumbFilePath);
                 skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
             }
         }
 
-        response.Data = await _artistModelsFactory.PrepareProfilePictureModelAsync(new ProfilePictureModel(), artist);
+        response.Data = picture.ToModel();
+        response.Data = await _pictureModelFactory.PreparePictureModelAsync(response.Data, picture);
 
         return Ok(response);
     }

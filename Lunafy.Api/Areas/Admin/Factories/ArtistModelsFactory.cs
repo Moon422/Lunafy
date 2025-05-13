@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Lunafy.Api.Areas.Admin.Models;
 using Lunafy.Api.Areas.Admin.Models.Artists;
 using Lunafy.Api.Models;
 using Lunafy.Core.Domains;
@@ -15,67 +16,35 @@ public class ArtistModelsFactory : IArtistModelsFactory
 {
     private readonly IArtistService _artistService;
     private readonly IPictureService _pictureService;
+    private readonly IPictureModelFactory _pictureModelFactory;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public ArtistModelsFactory(IArtistService artistService,
         IPictureService pictureService,
+        IPictureModelFactory pictureModelFactory,
         IHttpContextAccessor httpContextAccessor)
     {
         _artistService = artistService;
         _httpContextAccessor = httpContextAccessor;
         _pictureService = pictureService;
-    }
-
-    private string PrepareProfileImageUrl(int artistId, string filename, int width)
-    {
-        var httpContext = _httpContextAccessor.HttpContext
-            ?? throw new InvalidOperationException("HttpContext cannot be null.");
-
-        var url = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/images/artists/thumbs/{artistId}/{width}.webp";
-        return url;
-    }
-
-    private string PrepareNoImageUrl(int width)
-    {
-        var httpContext = _httpContextAccessor.HttpContext
-            ?? throw new InvalidOperationException("HttpContext cannot be null.");
-
-        var url = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/images/no_image_{width}.webp";
-        return url;
-    }
-
-    public async Task<ProfilePictureModel?> PrepareProfilePictureModelAsync(ProfilePictureModel? model, Artist artist)
-    {
-        if (model is null || artist is null)
-            return null;
-
-        Picture? picture;
-        if (!artist.ProfilePictureId.HasValue || (picture = await _pictureService.GetPictureByIdAsync(artist.ProfilePictureId.Value)) is null)
-        {
-            model.ProfileImage64 = PrepareNoImageUrl(64);
-            model.ProfileImage128 = PrepareNoImageUrl(128);
-            model.ProfileImage256 = PrepareNoImageUrl(256);
-            model.ProfileImage512 = PrepareNoImageUrl(512);
-            model.ProfileImage1024 = PrepareNoImageUrl(1024);
-
-            return model;
-        }
-
-        model.ProfileImage64 = PrepareProfileImageUrl(artist.Id, picture.Filename, 64);
-        model.ProfileImage128 = PrepareProfileImageUrl(artist.Id, picture.Filename, 128);
-        model.ProfileImage256 = PrepareProfileImageUrl(artist.Id, picture.Filename, 256);
-        model.ProfileImage512 = PrepareProfileImageUrl(artist.Id, picture.Filename, 512);
-        model.ProfileImage1024 = PrepareProfileImageUrl(artist.Id, picture.Filename, 1024);
-
-        return model;
+        _pictureModelFactory = pictureModelFactory;
     }
 
     public async Task<ArtistModel> PrepareArtistModelAsync(ArtistModel model, Artist artist)
     {
         ArgumentNullException.ThrowIfNull(model, nameof(model));
 
-        model.ProfilePicture = new ProfilePictureModel();
-        model.ProfilePicture = await PrepareProfilePictureModelAsync(model.ProfilePicture, artist);
+        var picture = await _pictureService.GetPictureByIdAsync(artist.ProfilePictureId.GetValueOrDefault());
+
+        model.ProfilePicture = picture is not null ? picture.ToModel()
+            : new PictureModel
+            {
+                PictureEntityTypeId = (int)PictureEntityType.Artist,
+                PictureEntityTypeIdStr = PictureEntityType.Artist.ToString(),
+                EntityId = artist.Id
+            };
+
+        model.ProfilePicture = await _pictureModelFactory.PreparePictureModelAsync(model.ProfilePicture, picture);
 
         return await Task.FromResult(model);
     }

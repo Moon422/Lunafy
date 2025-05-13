@@ -84,7 +84,7 @@ const editArtist = async (payload: ArtistEditModel) => {
         headers.append('Authorization', `Bearer ${authStore.token}`)
     }
 
-    const response = await fetch(`${baseUrl}/api/admin/user`, {
+    const response = await fetch(`${baseUrl}/api/admin/artist`, {
         method: 'PUT', headers, credentials: 'include', body: JSON.stringify(payload)
     })
 

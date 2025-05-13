@@ -1,3 +1,5 @@
+using System;
+using Lunafy.Api.Areas.Admin.Models;
 using Lunafy.Api.Areas.Admin.Models.Artists;
 using Lunafy.Api.Areas.Admin.Models.Users;
 using Lunafy.Core.Domains;
@@ -126,6 +128,18 @@ public static class Mapper
             CreatedOnTillUtc = command.CreatedOnTillUtc,
             PageNumber = command.PageNumber,
             PageSize = command.PageSize
+        };
+    }
+
+    public static PictureModel ToModel(this Picture entity)
+    {
+        return new PictureModel
+        {
+            Id = entity.Id,
+            PictureEntityTypeId = entity.PictureEntityTypeId,
+            PictureEntityTypeIdStr = entity.PictureEntityTypeId.ToString(),
+            EntityId = entity.EntityId,
+            Filename = entity.Filename,
         };
     }
 }
