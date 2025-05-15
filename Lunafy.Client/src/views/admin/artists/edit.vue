@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Loader from '@/components/admin/Loader.vue'
 import { useAuthStore } from '@/stores/auth'
-import type { ArtistCreateErrorModel, ArtistCreateModel, ArtistEditModel, ArtistReadModel, ProfilePictureModel } from '@/types/admin'
+import type { ArtistCreateErrorModel, ArtistCreateModel, ArtistEditModel, ArtistReadModel, PictureModel } from '@/types/admin'
 import type { HttpResponseModel } from '@/types/common'
 import type { LoginResponseModel } from '@/types/user'
 import { HTTP_STATUS } from '@/utils'
@@ -275,7 +275,7 @@ const sendUploadRequest = async () => {
         return response.status
     }
 
-    const { errors }: HttpResponseModel<ProfilePictureModel> = await response.json()
+    const { errors }: HttpResponseModel<PictureModel> = await response.json()
     if (!response.ok) {
         const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
         state.uploadProfileImageFailMsg = errorMsg
@@ -448,6 +448,25 @@ onMounted(async () => {
             </div>
         </div>
     </form>
+
+    <div class="container mt-3">
+        <div class="accordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#panel-profile-picture" aria-expanded="true"
+                        aria-controls="panel-profile-picture">
+                        Profile Picture
+                    </button>
+                </h2>
+                <div id="panel-profile-picture" class="accordion-collapse collapse show">
+                    <div class="accordion-body">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal -->
     <div class="modal fade" id="deleteConfirmation" tabindex="-1" aria-labelledby="deleteConfirmationLabel"

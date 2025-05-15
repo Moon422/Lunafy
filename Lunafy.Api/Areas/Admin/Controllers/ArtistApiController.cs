@@ -214,7 +214,71 @@ public class ArtistApiController : ControllerBase
             return BadRequest(response);
         }
 
-        if (!pictureId.HasValue && (image is null || image.Length <= 0))
+        Picture? picture;
+        if (image is not null)
+        {
+            var imageRoot = Path.Join(_env.WebRootPath, "images");
+            var thumbPicDir = Path.Join(imageRoot, "artists", "thumbs", artist.Id.ToString());
+
+            picture = new Picture
+            {
+                PictureEntityTypeId = (int)PictureEntityType.Artist,
+                EntityId = artist.Id,
+                Filename = $"{DateTime.UtcNow:yyyyMMddTHHmmssZ}_01"
+            };
+            await _pictureService.CreatePictureAsync(picture);
+
+            artist.ProfilePictureId = picture.Id;
+            await _artistService.UpdateArtistAsync(artist);
+
+            var uploadImagesRoot = Path.Join(_env.WebRootPath, _pictureService.GetPictureDirectory(picture));
+            if (!Directory.Exists(uploadImagesRoot))
+            {
+                Directory.CreateDirectory(uploadImagesRoot);
+            }
+
+            var filePath = Path.Join(_env.WebRootPath, _pictureService.GetPicturePath(picture));
+
+            using (var bitmap = SKBitmap.Decode(image.OpenReadStream()))
+            using (var scaledBitmap = new SKBitmap(1024, 1024))
+            using (var canvas = new SKCanvas(scaledBitmap))
+            {
+                canvas.Clear(SKColors.Transparent);
+                var destRect = new SKRect(0, 0, 1024, 1024);
+                canvas.DrawBitmap(bitmap, destRect);
+
+                var skImage = SKImage.FromBitmap(scaledBitmap);
+
+                using var outputFileStream = System.IO.File.OpenWrite(filePath);
+                skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
+            }
+
+            using (var bitmap = SKBitmap.Decode(image.OpenReadStream()))
+            {
+                foreach (var imageSize in IMAGE_DIMENSION)
+                {
+                    var thumbFilePath = Path.Join(thumbPicDir, $"{picture.Filename}_{imageSize}.webp");
+                    using var scaledBitmap = new SKBitmap(imageSize, imageSize);
+                    using var canvas = new SKCanvas(scaledBitmap);
+                    canvas.Clear(SKColors.Transparent);
+                    var destRect = new SKRect(0, 0, imageSize, imageSize);
+                    canvas.DrawBitmap(bitmap, destRect);
+
+                    var skImage = SKImage.FromBitmap(scaledBitmap);
+
+                    using var outputFileStream = System.IO.File.OpenWrite(thumbFilePath);
+                    skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
+                }
+            }
+
+            response.Data = picture.ToModel();
+            response.Data = await _pictureModelFactory.PreparePictureModelAsync(response.Data, picture);
+
+            return Ok(response);
+        }
+
+        picture = pictureId.HasValue && pictureId > 0 ? await _pictureService.GetPictureByIdAsync(pictureId.Value) : null;
+        if (picture is null || picture.PictureEntityTypeId != (int)PictureEntityType.Artist || picture.EntityId != artist.Id)
         {
             artist.ProfilePictureId = null;
             await _artistService.UpdateArtistAsync(artist);
@@ -229,59 +293,8 @@ public class ArtistApiController : ControllerBase
             return Ok(response);
         }
 
-        var imageRoot = Path.Join(_env.WebRootPath, "images");
-        var thumbPicDir = Path.Join(imageRoot, "artists", "thumbs", artist.Id.ToString());
-
-        var picture = new Picture
-        {
-            PictureEntityTypeId = (int)PictureEntityType.Artist,
-            EntityId = artist.Id,
-            Filename = $"{DateTime.UtcNow:yyyyMMddTHHmmssZ}_01"
-        };
-        await _pictureService.CreatePictureAsync(picture);
-
         artist.ProfilePictureId = picture.Id;
         await _artistService.UpdateArtistAsync(artist);
-
-        var uploadImagesRoot = Path.Join(_env.WebRootPath, _pictureService.GetPictureDirectory(picture));
-        if (!Directory.Exists(uploadImagesRoot))
-        {
-            Directory.CreateDirectory(uploadImagesRoot);
-        }
-
-        var filePath = Path.Join(_env.WebRootPath, _pictureService.GetPicturePath(picture));
-
-        using (var bitmap = SKBitmap.Decode(image.OpenReadStream()))
-        using (var scaledBitmap = new SKBitmap(1024, 1024))
-        using (var canvas = new SKCanvas(scaledBitmap))
-        {
-            canvas.Clear(SKColors.Transparent);
-            var destRect = new SKRect(0, 0, 1024, 1024);
-            canvas.DrawBitmap(bitmap, destRect);
-
-            var skImage = SKImage.FromBitmap(scaledBitmap);
-
-            using var outputFileStream = System.IO.File.OpenWrite(filePath);
-            skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
-        }
-
-        using (var bitmap = SKBitmap.Decode(image.OpenReadStream()))
-        {
-            foreach (var imageSize in IMAGE_DIMENSION)
-            {
-                var thumbFilePath = Path.Join(thumbPicDir, $"{picture.Filename}_{imageSize}.webp");
-                using var scaledBitmap = new SKBitmap(imageSize, imageSize);
-                using var canvas = new SKCanvas(scaledBitmap);
-                canvas.Clear(SKColors.Transparent);
-                var destRect = new SKRect(0, 0, imageSize, imageSize);
-                canvas.DrawBitmap(bitmap, destRect);
-
-                var skImage = SKImage.FromBitmap(scaledBitmap);
-
-                using var outputFileStream = System.IO.File.OpenWrite(thumbFilePath);
-                skImage.Encode(SKEncodedImageFormat.Webp, 75).SaveTo(outputFileStream);
-            }
-        }
 
         response.Data = picture.ToModel();
         response.Data = await _pictureModelFactory.PreparePictureModelAsync(response.Data, picture);

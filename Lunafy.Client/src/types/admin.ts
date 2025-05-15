@@ -62,7 +62,7 @@ export interface ArtistReadModel extends ArtistModel {
     modifiedOn: string | null
     deleted: boolean
     deletedOn: string | null
-    profilePicture: ProfilePictureModel | null
+    profilePicture: PictureModel | null
 }
 
 export interface ArtistCreateErrorModel {
@@ -71,9 +71,11 @@ export interface ArtistCreateErrorModel {
     musicBrainzId: string | null
 }
 
-export interface ProfilePictureModel {
-    profileImage64: string
-    profileImage128: string
-    profileImage256: string
-    profileImage512: string
+export interface PictureModel {
+    imageFile: string | null
+    thumb64: string
+    thumb128: string
+    thumb256: string
+    thumb512: string
+    thumb1024: string
 }

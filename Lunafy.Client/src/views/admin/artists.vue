@@ -187,8 +187,8 @@ watch([page, pageSize], async () => {
                     <tr v-for="artist in artists" :key="artist.id">
                         <th scope="row">{{ artist.id }}</th>
                         <th scope="row">
-                            <img :src="artist.profilePicture?.profileImage64" alt="Artist profile picture" width="64"
-                                height="64">
+                            <img :src="artist.profilePicture?.thumb64" class="rounded" alt="Artist profile picture"
+                                width="64" height="64">
                         </th>
                         <th scope="row">{{ artist.firstname }} {{ artist.lastname }}</th>
                         <th scope="row">{{ artist.musicBrainzId }}</th>
