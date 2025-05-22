@@ -62,6 +62,7 @@ export interface ArtistReadModel extends ArtistModel {
     modifiedOn: string | null
     deleted: boolean
     deletedOn: string | null
+    profilePictureId: number
     profilePicture: PictureModel | null
 }
 

@@ -68,6 +68,7 @@ public static class Mapper
             Firstname = artist.Firstname,
             Lastname = artist.Lastname,
             Biography = artist.Biography,
+            ProfilePictureId = artist.ProfilePictureId,
             MusicBrainzId = artist.MusicBrainzId,
             CreatedOn = artist.CreatedOn,
             ModifiedOn = artist.ModifiedOn,

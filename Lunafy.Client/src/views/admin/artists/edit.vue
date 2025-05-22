@@ -81,6 +81,7 @@ const fetchArtist = async () => {
     }
 
     state.artistModel = data
+    state.selectedUploadedImageId = data.profilePictureId
     return response.status
 }
 
@@ -291,11 +292,16 @@ const sendUploadRequest = async () => {
         return response.status
     }
 
-    const { errors }: HttpResponseModel<PictureModel> = await response.json()
+    const { data, errors }: HttpResponseModel<PictureModel> = await response.json()
     if (!response.ok) {
         const errorMsg = errors.find(el => el.length > 0) || "Something went wrong. Please try again."
         state.uploadProfileImageFailMsg = errorMsg
         return response.status
+    }
+
+    if (data && state.artistModel) {
+        state.artistModel.profilePicture = data
+        state.artistModel.profilePictureId = data.id
     }
 
     state.uploadProfileImage = null
@@ -641,7 +647,11 @@ onMounted(async () => {
                         <p>Do you want to remove profile picture?</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" @click="uploadImage">Remove Profile
+                        <button type="button" class="btn btn-danger" @click="async () => {
+                            state.selectedUploadedImageId = null
+                            state.uploadProfileImage = null
+                            await uploadImage()
+                        }">Remove Profile
                             Picture</button>
                     </div>
                 </div>
@@ -660,13 +670,15 @@ onMounted(async () => {
                     </div>
                     <div class="modal-body d-flex flex-column justify-content-center">
                         <div class="container mb-4">
-                            <div class="row">
-                                <div class="col-12 col-md-2 col-lg-4"
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6 col-lg-4"
                                     v-for="uploadedImage in state.uploadedProfileImages" :key="uploadedImage.id">
-                                    <div :class="`${state.selectedUploadedImageId !== uploadedImage.id ? 'p-1' : ''}`"
+                                    <div :class="`rounded-3 position-relative ${state.selectedUploadedImageId === uploadedImage.id ? 'border border-3 border-primary' : 'p-1'}`"
                                         @click="state.selectedUploadedImageId = uploadedImage.id">
-                                        <img :src="uploadedImage.thumb128" class="rounded"
-                                            :class="`${state.selectedUploadedImageId === uploadedImage.id ? 'border border-3 border-primary' : ''}`">
+                                        <i class="bi bi-check-square-fill position-absolute" style="font-size: 1.35rem;"
+                                            :style="{ left: state.selectedUploadedImageId === uploadedImage.id ? '0.3375rem' : '0.6rem' }"
+                                            v-if="state.artistModel.profilePictureId === uploadedImage.id"></i>
+                                        <img :src="uploadedImage.thumb128" class="rounded w-100">
                                     </div>
                                 </div>
                             </div>
