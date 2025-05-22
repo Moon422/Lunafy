@@ -71,4 +71,24 @@ public class ArtistModelsFactory : IArtistModelsFactory
             TotalPages = artistsResult.TotalPages
         };
     }
+
+    public async Task<SearchResultModel<PictureModel>> PrepareUploadedImagesAsync(int artistId, int page, int pageSize)
+    {
+        var images = await _pictureService.SearchPicturesAsync(pictureEntityTypeId: (int)PictureEntityType.Artist, entityId: artistId, pageIndex: page - 1, pageSize: pageSize);
+
+        var pictureModels = new List<PictureModel>();
+        foreach (var image in images)
+        {
+            pictureModels.Add(await _pictureModelFactory.PreparePictureModelAsync(image.ToModel(), image));
+        }
+
+        return new SearchResultModel<PictureModel>
+        {
+            Data = pictureModels,
+            PageNumber = images.PageNumber,
+            PageSize = images.PageSize,
+            TotalItems = images.TotalItems,
+            TotalPages = images.TotalPages
+        };
+    }
 }

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using SkiaSharp;
 
 namespace Lunafy.Api.Areas.Admin.Controllers;
@@ -299,6 +300,27 @@ public class ArtistApiController : ControllerBase
         response.Data = picture.ToModel();
         response.Data = await _pictureModelFactory.PreparePictureModelAsync(response.Data, picture);
 
+        return Ok(response);
+    }
+
+    [HttpGet("{artistId}/uploaded-images")]
+    public async Task<IActionResult> UploadedImages(int artistId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var user = await _workContext.GetCurrentUserAsync();
+        if (user is null || !user.IsAdmin)
+        {
+            return Forbid();
+        }
+
+        var response = new HttpResponseModel<SearchResultModel<PictureModel>>();
+        var artist = await _artistService.GetArtistByIdAsync(artistId);
+        if (artist is null)
+        {
+            response.Errors.Add("Artist not found.");
+            return BadRequest(response);
+        }
+
+        response.Data = await _artistModelsFactory.PrepareUploadedImagesAsync(artist.Id, page, pageSize);
         return Ok(response);
     }
 }

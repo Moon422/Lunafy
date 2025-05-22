@@ -2,7 +2,7 @@
 import Loader from '@/components/admin/Loader.vue'
 import { useAuthStore } from '@/stores/auth'
 import type { ArtistCreateErrorModel, ArtistEditModel, ArtistReadModel, PictureModel } from '@/types/admin'
-import type { HttpResponseModel } from '@/types/common'
+import type { HttpResponseModel, SearchResultModel } from '@/types/common'
 import type { LoginResponseModel } from '@/types/user'
 import { HTTP_STATUS } from '@/utils'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
@@ -26,7 +26,11 @@ const state = reactive<{
     uploadProfileImageSuccessMsg: string | null,
     uploadProfileImageFailMsg: string | null,
     uploadedProfileImages: PictureModel[],
-    isLoadingUploadedProfileImages: boolean
+    selectedUploadedImageId: number | null,
+    fetchUploadedProfileImagesPage: number,
+    fetchUploadedProfileImagesPageSize: number,
+    isLoadingUploadedProfileImages: boolean,
+    canLoadUploadedImages: boolean
 }>({
     loading: false,
     artistModel: null,
@@ -40,7 +44,11 @@ const state = reactive<{
     uploadProfileImageSuccessMsg: null,
     uploadProfileImageFailMsg: null,
     uploadedProfileImages: [],
-    isLoadingUploadedProfileImages: false
+    fetchUploadedProfileImagesPage: 1,
+    fetchUploadedProfileImagesPageSize: 12,
+    isLoadingUploadedProfileImages: false,
+    selectedUploadedImageId: 4,
+    canLoadUploadedImages: true
 })
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -270,6 +278,7 @@ const confirmUploadImage = async () => {
 const sendUploadRequest = async () => {
     const formData = new FormData()
     formData.append("image", state.uploadProfileImage || new Blob([], { type: "application/octet-stream" }), state.uploadProfileImage?.name || '')
+    formData.append("PictureId", state.selectedUploadedImageId?.toString() ?? '0')
 
     const id = typeof artistId === 'string' ? Number.isNaN(artistId) ? 0 : parseInt(artistId) : Number.isNaN(artistId[0]) ? 0 : parseInt(artistId[0])
     const response = await fetch(`${baseUrl}/api/admin/artist/${id}/upload-profile-picture`, {
@@ -321,6 +330,57 @@ const uploadImage = async () => {
     }
 }
 
+const fetchProfileImages = async () => {
+    if (!state.artistModel) {
+        return HTTP_STATUS.BAD_REQUEST
+    }
+
+    const response = await fetch(`${baseUrl}/api/admin/artist/${state.artistModel.id}/uploaded-images`, {
+        method: 'GET',
+        credentials: 'include',
+    })
+
+    if (response.status === HTTP_STATUS.UNAUTHORIZED) {
+        return response.status
+    }
+
+    const { data, errors }: HttpResponseModel<SearchResultModel<PictureModel>> = await response.json()
+    if (!response.ok) {
+        return response.status
+    }
+
+    if (data) {
+        state.fetchUploadedProfileImagesPage++
+        state.canLoadUploadedImages = state.fetchUploadedProfileImagesPage <= data.totalPages
+        state.uploadedProfileImages = [...state.uploadedProfileImages, ...data.data]
+    }
+
+    return response.status
+}
+
+const loadUploadedImages = async () => {
+    state.isLoadingUploadedProfileImages = true
+    try {
+        if (await fetchProfileImages() === HTTP_STATUS.UNAUTHORIZED) {
+            const loginResponse = await fetch(`${baseUrl}/api/user/refresh-token`, {
+                credentials: 'include'
+            })
+
+            if (!loginResponse.ok) {
+                router.push('/login')
+            }
+
+            await fetchProfileImages()
+        }
+
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        state.error = errorMessage
+    } finally {
+        state.isLoadingUploadedProfileImages = false
+    }
+}
+
 watch(() => state.error, () => {
     if (state.error && state.error.length > 0) {
         toast.error(state.error, { onClose: () => state.error = null })
@@ -344,6 +404,8 @@ onMounted(async () => {
                 state.error = "Failed to load user data. Please try again."
             }
         }
+
+        await fetchProfileImages()
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err)
         state.error = errorMessage
@@ -596,16 +658,31 @@ onMounted(async () => {
                         </h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <Loader :loading="state.isLoadingUploadedProfileImages" />
-                        <p>Do you want to remove profile picture?</p>
+                    <div class="modal-body d-flex flex-column justify-content-center">
+                        <div class="container mb-4">
+                            <div class="row">
+                                <div class="col-12 col-md-2 col-lg-4"
+                                    v-for="uploadedImage in state.uploadedProfileImages" :key="uploadedImage.id">
+                                    <div :class="`${state.selectedUploadedImageId !== uploadedImage.id ? 'p-1' : ''}`"
+                                        @click="state.selectedUploadedImageId = uploadedImage.id">
+                                        <img :src="uploadedImage.thumb128" class="rounded"
+                                            :class="`${state.selectedUploadedImageId === uploadedImage.id ? 'border border-3 border-primary' : ''}`">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button v-if="state.canLoadUploadedImages" type="button" class="btn btn-outline-primary"
+                            @click="loadUploadedImages">Load
+                            more</button>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" @click="uploadImage">Remove Profile
-                            Picture</button>
+                        <button type="button" class="btn btn-primary" @click="uploadImage">Change Profile Image</button>
                     </div>
                 </div>
             </div>
+
+            <Loader :loading="state.isLoadingUploadedProfileImages" />
         </div>
     </div>
     <div v-else-if="!state.loading && !state.artistModel">

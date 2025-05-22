@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Lunafy.Core.Domains;
 using Lunafy.Core.Infrastructure.Dependencies;
@@ -80,5 +82,37 @@ public class PictureService : IPictureService
         }
 
         return Path.Join(GetPictureDirectory(picture, thumbDirectory), $"{picture.Filename}.webp");
+    }
+
+    public Task<IPagedList<Picture>> SearchPicturesAsync(int? pictureEntityTypeId = null, int? entityId = null, string filename = "", DateTime? createdOnFrom = null, DateTime? createdOnTill = null, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        var query = _pictureRepository.Table;
+
+        if (pictureEntityTypeId.HasValue)
+        {
+            query = query.Where(x => x.PictureEntityTypeId == pictureEntityTypeId);
+        }
+
+        if (entityId.HasValue)
+        {
+            query = query.Where(x => x.EntityId == entityId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filename))
+        {
+            query = query.Where(x => x.Filename.ToLower() == filename.ToLower());
+        }
+
+        if (createdOnFrom.HasValue)
+        {
+            query = query.Where(x => x.CreatedOn >= createdOnFrom);
+        }
+
+        if (createdOnTill.HasValue)
+        {
+            query = query.Where(x => x.CreatedOn <= createdOnTill);
+        }
+
+        return query.ToPagedListAsync(pageIndex, pageSize);
     }
 }

@@ -17,6 +17,8 @@ public record ArtistModel : BaseEntityModel
 
     public Guid? MusicBrainzId { get; set; }
 
+    public int? ProfilePictureId { get; set; }
+
     public PictureModel? ProfilePicture { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime? ModifiedOn { get; set; }

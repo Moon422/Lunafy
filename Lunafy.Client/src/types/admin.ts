@@ -72,6 +72,7 @@ export interface ArtistCreateErrorModel {
 }
 
 export interface PictureModel {
+    id: number
     imageFile: string | null
     thumb64: string
     thumb128: string
